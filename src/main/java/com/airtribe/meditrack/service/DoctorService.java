@@ -1,3 +1,4 @@
+// Contributed by Zubair: Handles primary doctor business logic operations
 package com.airtribe.meditrack.service;
 
 import com.airtribe.meditrack.constants.Constants;
