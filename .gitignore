@@ -51,3 +51,15 @@ docs/javadoc/
 .scannerwork/
 coverage/
 *.exec
+
+### Python ###
+.venv/
+__pycache__/
+*.pyc
+
+### Video render output ###
+# The rendered film is hundreds of MB — far past GitHub's 100MB file limit.
+# Everything needed to REGENERATE it is committed (script, animated master,
+# render pipeline); the artefact itself is distributed via Releases.
+video/out/
+video/render/node_modules/

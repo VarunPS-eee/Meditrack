@@ -1,0 +1,8 @@
+{
+  "name": "meditrack-film-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Frame-exact 4K renderer for the MediTrack demonstration film.",
+  "dependencies": { "puppeteer-core": "^23.0.0" }
+}

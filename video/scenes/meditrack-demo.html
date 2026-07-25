@@ -620,6 +620,100 @@ addEventListener('keydown', e=>{
 });
 
 activate(0);
+
+/* ============================================================
+   RENDER API
+   Used by video/render/render-frames.mjs to produce frame-exact
+   output. None of this runs during normal playback.
+
+   CSS animations advance on wall-clock time, which makes a screen
+   recording subject to dropped frames and scheduler jitter. The
+   Web Animations API lets us pause every animation and set its
+   currentTime explicitly, so frame N is identical no matter how
+   long the machine took to draw it.
+   ============================================================ */
+const FADE = 0.6;                    // matches the .scene opacity transition
+
+/* Count-up tiles are rAF-driven during playback; here the value is a
+   pure function of scene-local time so it cannot drift. */
+function statValueAt(el, local){
+  const tile  = el.closest('.tile');
+  const idx   = [...tile.parentElement.children].indexOf(tile);
+  const delay = 0.15 + 0.15*idx;     // matches the CSS stagger
+  const p     = Math.max(0, Math.min(1, (local - delay)/0.9));
+  return Math.round((+el.dataset.to) * (1-Math.pow(1-p,3))).toLocaleString('en-US');
+}
+
+/* Anything driven by setTimeout during playback is recomputed from
+   local time instead, for the same reason. */
+function deterministicState(id, local){
+  if(id === 's4'){
+    document.querySelectorAll('#s4 .num').forEach(el=>{ el.textContent = statValueAt(el, local); });
+  }
+  if(id === 's6'){
+    HIER.forEach(h=>document.getElementById(h.el).classList.toggle('lit', local >= h.at));
+  }
+  if(id === 's11'){
+    const n = document.getElementById('bugN');
+    n.textContent = local < 1.6 ? '13'
+      : String(Math.max(0, 13 - Math.floor((local-1.6)/0.07)));
+  }
+}
+
+function freeze(root, ms){
+  root.getAnimations({subtree:true}).forEach(a=>{
+    try{ a.pause(); a.currentTime = ms; }catch(e){/* finished animations reject seeks */}
+  });
+}
+
+/**
+ * Render one frame at absolute time t (seconds). Idempotent — calling
+ * it twice with the same t paints identical pixels.
+ */
+window.seekFrame = function(t){
+  playing = false; clock = t;
+  const i = sceneAt(t), local = t - TIMELINE[i].t;
+
+  document.querySelectorAll('.scene').forEach(s=>{
+    s.classList.remove('on');
+    s.style.transition = 'none';
+    s.style.visibility = 'hidden';
+    s.style.opacity = '0';
+  });
+
+  const cur = document.getElementById(TIMELINE[i].id);
+  cur.classList.add('on');
+  cur.style.visibility = 'visible';
+  cur.style.opacity = '1';
+  void cur.offsetWidth;                      // restart the CSS animations
+  freeze(cur, local*1000);
+  deterministicState(TIMELINE[i].id, local);
+
+  /* Hold the outgoing scene under the incoming one for the crossfade. */
+  if(local < FADE && i > 0){
+    const prev = document.getElementById(TIMELINE[i-1].id);
+    const prevLocal = (TIMELINE[i].t - TIMELINE[i-1].t) + local;
+    prev.classList.add('on');
+    prev.style.visibility = 'visible';
+    prev.style.opacity = String(1 - local/FADE);
+    void prev.offsetWidth;
+    freeze(prev, prevLocal*1000);
+    deterministicState(TIMELINE[i-1].id, prevLocal);
+    cur.style.opacity = String(local/FADE);
+  }
+
+  /* Ambient layers run on absolute, not scene-local, time. No subtree
+     here — that would clobber the per-scene times set above. */
+  document.getElementById('stage').getAnimations()
+    .forEach(a=>{ try{ a.pause(); a.currentTime = t*1000; }catch(e){} });
+  document.getElementById('grain').getAnimations()
+    .forEach(a=>{ try{ a.pause(); a.currentTime = t*1000; }catch(e){} });
+
+  document.getElementById('hud').classList.add('hide');
+  return true;
+};
+
+window.FILM_DURATION = DURATION;
 </script>
 </body>
 </html>

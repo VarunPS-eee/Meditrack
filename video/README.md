@@ -21,22 +21,91 @@ no network.
 | **[`narration/captions.srt`](narration/captions.srt)** | 42 timed subtitle cues |
 | **[`capture/capture-all.sh`](capture/capture-all.sh)** | Regenerates every piece of terminal footage from the live application |
 | **[`assets/`](assets/)** | The captured output — bill, triage, JVM boot, tests, case sheets, reports |
-| **[`PRODUCTION.md`](PRODUCTION.md)** | How to record at 4K, mix the audio, and export |
+| **[`render/`](render/)** | **The build pipeline.** Renders the film end to end — frames, voice, score, mux |
+| **[`PRODUCTION.md`](PRODUCTION.md)** | Manual route: recording at 4K by hand, mixing, export targets |
 
 ---
 
-## Status — read this first
+## Building the film
 
-**Done and in the repository:** the script, the animated master, all captured
-footage, the narration script, the subtitles, and the production guide.
+```bash
+bash video/render/build.sh          # everything  (~45 min)
+bash video/render/build.sh audio    # voice + score only  (~2 min)
+bash video/render/build.sh mux      # re-mux existing parts  (seconds)
+```
 
-**Not done:** the exported `.mp4` with voiceover. Rendering video and
-synthesising speech need `ffmpeg` and a TTS engine, and neither is installed on
-the machine this was built on. [`PRODUCTION.md`](PRODUCTION.md) is the remaining
-hour of work — install two free tools, record one take, mux.
+Output lands in `video/out/` (gitignored — see [below](#why-the-mp4-is-not-in-the-repository)).
 
-Nothing here is a placeholder or a mock-up. The animated master really plays; the
-captures are real program output.
+### The finished film
+
+Built and verified on 26 Jul 2026. These are measured figures, not targets:
+
+| Artefact | Size | Resolution | Runtime | Audio |
+|---|---|---|---|---|
+| `meditrack-demo-4k.mp4` | 595 MB | 3840×2160 @ 30fps, CRF 16 | 300.00s | AAC 320k, 48kHz stereo |
+| `meditrack-demo-1080p.mp4` | 24 MB | 1920×1080, CRF 21 | 300.01s | AAC 192k, 48kHz stereo |
+
+Verified after the mux, not merely intended:
+
+- **Runtime 5:00.00** — exactly on the script, no drift across 9,000 frames
+- **−15.0 LUFS integrated**, LRA 5.5 — within 1 LU of the −16 target, well placed
+  for YouTube's −14 normalisation
+- **0:50–0:56 measures −91.0 dB** in narration, score and final mix alike. The
+  silence survived the loudnorm pass, which is the thing most likely to destroy it
+- **₹1,593.00 and 325 assertions** are legible on screen and match `assets/`
+- HUD hidden; ₹ renders as ₹ throughout, no `?` boxes
+
+| Stage | Tool | What it does |
+|---|---|---|
+| **Frames** | [`render-frames.mjs`](render/render-frames.mjs) | Drives the animated master with Puppeteer, stepping `window.seekFrame(t)` one frame at a time, piping each screenshot straight into ffmpeg |
+| **Voice** | [`make-narration.py`](render/make-narration.py) | Parses the timestamped blocks out of `voiceover.txt`, synthesises each with `edge-tts`, lays them on a 300s bed at their scripted offsets |
+| **Score** | [`make-music.py`](render/make-music.py) | Synthesises the pad, the cardiac pulse and the two stingers from scratch — no samples, nothing licensed |
+| **Mux** | [`build.sh`](render/build.sh) | Mixes voice over score, muxes to 4K, then renders a 1080p web cut |
+
+### Why frame-stepping instead of screen recording
+
+A screen recorder captures wall-clock time, so a busy machine silently drops
+frames. The renderer instead asks the page for each frame explicitly and waits —
+slower than real time, but never lossy, and identical on any machine.
+
+That requires the animation to be seekable, which is what the render API at the
+bottom of [`scenes/meditrack-demo.html`](scenes/meditrack-demo.html) provides:
+every CSS animation is paused and its `currentTime` set explicitly, and anything
+that was `setTimeout`-driven during playback is recomputed as a pure function of
+scene-local time. Frame *N* is the same pixels no matter how long the machine
+took to draw it.
+
+Frames are piped to ffmpeg rather than written out — 9,000 uncompressed 4K
+frames would be about 90 GB.
+
+### Requirements
+
+Node, Python and Chrome are the only hard ones, plus **ffmpeg**:
+
+```powershell
+winget install Gyan.FFmpeg
+```
+
+```bash
+cd video/render && npm install     # puppeteer-core, drives your installed Chrome
+python -m pip install edge-tts     # free Microsoft neural voices, no API key
+```
+
+### Swapping the voice or the music
+
+Both are one re-mux, not a re-render:
+
+- **Own voice:** record over [`narration/voiceover.txt`](narration/voiceover.txt),
+  save as `video/out/narration.wav`, then `build.sh mux`
+- **Own music:** drop a track at `video/out/music.wav`, then `build.sh mux`
+- **Different TTS voice:** change `VOICE` in `make-narration.py` —
+  `python -m edge_tts --list-voices` lists them all
+
+### Why the .mp4 is not in the repository
+
+The 4K master runs to several hundred megabytes, well past GitHub's 100 MB file
+limit, so `video/out/` is gitignored. Everything needed to *regenerate* it is
+committed. Distribute the artefact through GitHub Releases or YouTube.
 
 ---
 

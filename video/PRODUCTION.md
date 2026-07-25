@@ -2,12 +2,40 @@
 
 How to turn the assets in this folder into the finished 4K film.
 
-> **Status: everything up to the render is done and in this repository.** The
-> script, the timed animated master, the real captured footage, the narration and
-> the subtitles all exist and are reproducible. What is *not* here is the
-> exported `.mp4` — rendering and voice synthesis need `ffmpeg` and a TTS engine,
-> neither of which is installed on the machine this was built on. The steps below
-> are what remains, and they take about an hour.
+> ## There is an automated path — use it first
+>
+> ```bash
+> winget install Gyan.FFmpeg          # once
+> cd video/render && npm install       # once
+> python -m pip install edge-tts       # once
+>
+> bash video/render/build.sh           # everything, ~45 min, unattended
+> ```
+>
+> That renders the frames, synthesises the voice and score, mixes, and exports
+> both a 4K master and a 1080p web cut. **No screen recorder and no microphone.**
+> See [`README.md`](README.md#building-the-film) for the stage breakdown.
+>
+> The rest of this document is the **manual route** — worth reading if you want
+> to shoot it by hand, record your own narration, or understand the choices the
+> automated pipeline is making on your behalf.
+
+---
+
+## Why frame-stepping beats screen recording
+
+The automated path does not record the screen. It asks the page to render one
+exact frame at a time and pipes each into ffmpeg.
+
+That matters because a screen recorder samples wall-clock time: if the machine
+stalls for 40ms, that frame is simply gone, and no amount of re-encoding brings
+it back. Stepping the timeline explicitly is slower than real time but cannot
+drop anything, and produces identical output on any machine.
+
+It works because [`scenes/meditrack-demo.html`](scenes/meditrack-demo.html)
+exposes `window.seekFrame(t)`, which pauses every CSS animation and sets its
+`currentTime` directly, and recomputes anything that was `setTimeout`-driven as
+a pure function of scene-local time.
 
 ---
 

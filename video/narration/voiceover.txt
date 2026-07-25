@@ -47,17 +47,15 @@ Watch the *order* these four lines appear in. [///]
 Constants initialises first — a static block, running before a single object
 exists. [//]
 
-AppConfig is an eager singleton. Built during class initialisation, and
-thread-safe for free, because the JVM runs that [//] exactly once [//] under
-its own lock. [//]
+AppConfig is an eager singleton — thread-safe for free, because the JVM runs
+class initialisation [//] exactly once [//] under its own lock. [//]
 
-IdGenerator is lazy. It waits until something actually asks for it. [///]
+IdGenerator is lazy. It waits until something asks for it. [///]
 
-And MedicalEntity — the root of the entire class hierarchy — loads [//]
-*last*. [///]
+And MedicalEntity — the root of the entire hierarchy — loads [//] *last*. [///]
 
-Not because it matters least. Because the JVM does not load a class until the
-moment it is first used. [//]
+Not because it matters least, but because the JVM doesn't load a class until
+it's first used. [//]
 That ordering isn't documentation. [//] It's the class loader, caught in the
 act.
 
@@ -92,22 +90,17 @@ Without that discipline, console applications reliably become god objects.
 
 One bill. Three design patterns, each doing real work. [///]
 
-*Factory* chose the subclass — and its switch is exhaustive, so adding a bill
-type without handling it is a compile error, [//] not a silently unpriced bill.
-[//]
+*Factory* chose the subclass. Its switch is exhaustive, so adding a bill type
+without handling it is a compile error [//] not a silently unpriced bill. [//]
 
-*Strategy* chose the pricing policy. Nobody selected "senior citizen". Ravi is
-sixty-seven, and the policy was derived from his own record. [//]
+*Strategy* chose the pricing policy. Nobody selected "senior citizen" — Ravi is
+sixty-seven, and it was derived from his own record. [//]
 
-*Template Method* fixed the order. generateBill is final. The sequence is a
-business invariant, so no subclass can discount [//] after [//] tax.
+*Template Method* fixed the order. generateBill is final, so no subclass can
+discount [//] after [//] tax. [///]
 
-[ 3:27 — over the arithmetic ]
-
-Fifteen hundred. Less ten percent. Then eighteen percent tax on what remains.
-[//]
-The discount lands before the tax — because the template will not permit
-anything else.
+Fifteen hundred. Less ten percent. Then eighteen percent on what remains. [//]
+The discount lands before the tax, because the template permits nothing else.
 
 
 ────────────────────────────────────────────────────────────────────────
@@ -116,10 +109,10 @@ anything else.
 
 Type symptoms in plain English, and it routes you. [//]
 No machine learning. No network call. Keyword rules declared on the enum
-itself, so the mapping lives next to the speciality it describes. [//]
+itself, so the mapping lives beside the speciality it describes. [//]
 
-And it shows its work — which keywords matched, the confidence, and why each
-doctor ranked where they did. [//]
+And it shows its work — which keywords matched, and why each doctor ranked
+where they did. [//]
 Experience is capped at twenty years, so a long-serving generalist can never
 outrank a well-matched specialist [//] on longevity alone.
 
