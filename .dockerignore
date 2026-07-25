@@ -1,0 +1,38 @@
+# Keep the build context small and reproducible.
+# Anything listed here is never sent to the Docker daemon.
+
+# Build output — the image compiles from source, it must not inherit host artefacts.
+out/
+build/
+bin/
+target/
+*.class
+*.jar
+
+# Runtime data — the container uses its own /data volume.
+data/
+
+# Version control and IDE metadata
+.git/
+.gitignore
+.github/
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Documentation is not needed to build or run the image.
+docs/
+*.md
+!README.md
+
+# Docker's own files
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# OS noise
+.DS_Store
+Thumbs.db
