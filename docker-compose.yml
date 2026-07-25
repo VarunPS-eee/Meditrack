@@ -1,0 +1,50 @@
+# =============================================================================
+#  MediTrack — Docker Compose
+#
+#  Two services sharing one image:
+#    meditrack  — the interactive console app (needs a TTY)
+#    tests      — one-shot test run, used in CI and for a quick health check
+#
+#  Usage:
+#    docker compose run --rm meditrack              # interactive, demo data
+#    docker compose run --rm meditrack --loadData   # restore from ./data
+#    docker compose run --rm tests                  # run the 325-assertion suite
+# =============================================================================
+
+services:
+
+  meditrack:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: meditrack:1.0.0
+    container_name: meditrack-app
+
+    # A console menu reads from stdin; without both of these the app sees EOF
+    # immediately and exits.
+    stdin_open: true
+    tty: true
+
+    environment:
+      MEDITRACK_DATA_DIR: /data
+      LANG: C.UTF-8
+
+    volumes:
+      # Persist CSV data on the host so it survives `docker compose down`.
+      - ./data:/data
+
+    command: ["--seedDemo"]
+
+  # One-shot test runner. Exits non-zero if any assertion fails, so it works as
+  # a CI gate: `docker compose run --rm tests`
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: meditrack:1.0.0
+    container_name: meditrack-tests
+    environment:
+      LANG: C.UTF-8
+    command: ["--runTests"]
