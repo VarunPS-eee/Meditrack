@@ -1,0 +1,236 @@
+package com.airtribe.meditrack.service;
+
+import com.airtribe.meditrack.entity.Appointment;
+import com.airtribe.meditrack.interfaces.AppointmentObserver;
+import com.airtribe.meditrack.util.DateUtil;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+/**
+ * The <b>Subject</b> half of the Observer pattern, plus the background reminder sweep.
+ *
+ * <h2>Observer</h2>
+ * <p>Observers register here and are notified of every appointment event. The service has
+ * no idea whether an observer sends SMS, writes an audit line or does nothing — it holds
+ * only {@link AppointmentObserver} references. Adding a channel means writing one class
+ * and calling {@link #register(AppointmentObserver)}; no existing code changes.</p>
+ *
+ * <h2>Concurrency</h2>
+ * <p>Three distinct mechanisms are used here, each for a specific reason:</p>
+ *
+ * <ul>
+ *   <li>{@link CopyOnWriteArrayList} for the observer list. Registration happens rarely
+ *       (at startup) while iteration happens on every event, including from the timer
+ *       thread. Copy-on-write makes reads lock-free and removes any chance of a
+ *       {@link java.util.ConcurrentModificationException} if an observer registers
+ *       another observer mid-dispatch.</li>
+ *   <li>{@link AtomicInteger} for the event counter — {@code count++} is a
+ *       read-modify-write that loses updates when the main and timer threads race;
+ *       {@code incrementAndGet()} cannot.</li>
+ *   <li>A {@code synchronized} block around the reminder sweep, so a sweep already in
+ *       flight is never overlapped by the next tick.</li>
+ * </ul>
+ *
+ * <h2>TimerTask</h2>
+ * <p>{@link Timer} runs {@link ReminderTask} on a <em>daemon</em> thread, so the JVM can
+ * exit when the user quits the menu instead of hanging on a live scheduler.</p>
+ *
+ * @author Zubair (Services, Logic, Observer and AI)
+ */
+public class NotificationService {
+
+    /** Event names dispatched to observers. */
+    public static final String EVENT_BOOKED = "BOOKED";
+    public static final String EVENT_CANCELLED = "CANCELLED";
+    public static final String EVENT_RESCHEDULED = "RESCHEDULED";
+    public static final String EVENT_COMPLETED = "COMPLETED";
+    public static final String EVENT_REMINDER = "REMINDER";
+
+    /** Appointments within this many hours are reminded about. */
+    private static final long REMINDER_WINDOW_HOURS = 24;
+
+    private final List<AppointmentObserver> observers = new CopyOnWriteArrayList<>();
+
+    /** Atomic because the main thread and the timer thread both increment it. */
+    private final AtomicInteger eventsDispatched = new AtomicInteger(0);
+
+    /** Guards the reminder sweep against overlapping runs. */
+    private final Object sweepLock = new Object();
+
+    private Timer reminderTimer;
+    private boolean enabled = true;
+
+    // ------------------------------------------------------------- registration
+    /**
+     * @param observer the channel to add; {@code null} and duplicates are ignored
+     */
+    public void register(AppointmentObserver observer) {
+        if (observer != null && !observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    /**
+     * @param observer the channel to remove
+     * @return {@code true} if it was registered
+     */
+    public boolean unregister(AppointmentObserver observer) {
+        return observers.remove(observer);
+    }
+
+    public int getObserverCount() {
+        return observers.size();
+    }
+
+    public List<AppointmentObserver> getObservers() {
+        return List.copyOf(observers);
+    }
+
+    public int getEventsDispatched() {
+        return eventsDispatched.get();
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    // ---------------------------------------------------------------- dispatch
+    /**
+     * Fans an event out to every interested observer.
+     *
+     * <p>Each observer is invoked inside its own try/catch: a channel that throws must not
+     * prevent the remaining channels from being notified, and must certainly not fail the
+     * booking that triggered it.</p>
+     *
+     * @param appointment the appointment concerned
+     * @param eventType   one of the {@code EVENT_*} constants
+     */
+    public void notifyObservers(Appointment appointment, String eventType) {
+        if (!enabled || appointment == null) {
+            return;
+        }
+        eventsDispatched.incrementAndGet();
+
+        for (AppointmentObserver observer : observers) {
+            if (!observer.isInterestedIn(eventType)) {
+                continue;
+            }
+            try {
+                observer.update(appointment, eventType);
+            } catch (RuntimeException e) {
+                System.out.printf("    [WARN] Observer %s failed: %s%n",
+                        observer.getObserverName(), e.getMessage());
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- reminders
+    /**
+     * The scheduled sweep. Extends {@link TimerTask}, which is simply a {@link Runnable}
+     * the {@link Timer} knows how to schedule.
+     */
+    private class ReminderTask extends TimerTask {
+
+        private final Supplier<List<Appointment>> appointmentSupplier;
+
+        ReminderTask(Supplier<List<Appointment>> appointmentSupplier) {
+            this.appointmentSupplier = appointmentSupplier;
+        }
+
+        @Override
+        public void run() {
+            // synchronized: if a sweep runs long, the next tick waits rather than
+            // interleaving and double-reminding the same patient.
+            synchronized (sweepLock) {
+                try {
+                    sweepOnce(appointmentSupplier.get());
+                } catch (RuntimeException e) {
+                    System.out.println("    [WARN] Reminder sweep failed: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends a reminder for every upcoming appointment inside the reminder window.
+     *
+     * @param appointments the appointments to consider
+     * @return how many reminders were sent
+     */
+    public int sweepOnce(List<Appointment> appointments) {
+        if (appointments == null || !enabled) {
+            return 0;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        int sent = 0;
+        for (Appointment appointment : appointments) {
+            if (!appointment.isUpcoming()) {
+                continue;
+            }
+            long hoursAway = DateUtil.hoursBetween(now, appointment.getSlot());
+            if (hoursAway >= 0 && hoursAway <= REMINDER_WINDOW_HOURS) {
+                notifyObservers(appointment, EVENT_REMINDER);
+                sent++;
+            }
+        }
+        return sent;
+    }
+
+    /**
+     * Starts the periodic reminder sweep on a daemon thread.
+     *
+     * @param appointmentSupplier supplies the current appointment list at each tick
+     * @param periodSeconds       how often to sweep
+     */
+    public void startReminderScheduler(Supplier<List<Appointment>> appointmentSupplier, long periodSeconds) {
+        if (reminderTimer != null) {
+            return;   // already running
+        }
+        // daemon = true: this thread must not keep the JVM alive after the user quits.
+        reminderTimer = new Timer("meditrack-reminder", true);
+        long periodMillis = Math.max(1, periodSeconds) * 1000L;
+        reminderTimer.scheduleAtFixedRate(
+                new ReminderTask(appointmentSupplier), periodMillis, periodMillis);
+
+        System.out.printf("  [Reminders] Background scheduler started (every %ds, daemon thread).%n",
+                periodSeconds);
+    }
+
+    /** Stops the reminder sweep and releases the timer thread. */
+    public void stopReminderScheduler() {
+        if (reminderTimer != null) {
+            reminderTimer.cancel();
+            reminderTimer = null;
+            System.out.println("  [Reminders] Background scheduler stopped.");
+        }
+    }
+
+    public boolean isSchedulerRunning() {
+        return reminderTimer != null;
+    }
+
+    /** Prints which channels are currently subscribed. */
+    public void printObservers() {
+        if (observers.isEmpty()) {
+            System.out.println("  No notification channels registered.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder(160);
+        sb.append("  Registered channels: ");
+        for (AppointmentObserver observer : observers) {
+            sb.append(observer.getObserverName()).append("  ");
+        }
+        sb.append("\n  Events dispatched: ").append(eventsDispatched.get());
+        System.out.println(sb);
+    }
+}
