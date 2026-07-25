@@ -3,15 +3,6 @@ package com.airtribe.meditrack.entity;
 import java.util.Arrays;
 import java.util.Optional;
 
-/**
- * The kinds of bill {@code BillFactory} knows how to build.
- *
- * <p>This enum is the factory's <em>discriminator</em>: callers name a
- * {@code BillType} and the factory returns the matching {@link Bill} subclass,
- * so no caller ever writes {@code new EmergencyBill(...)} directly.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public enum BillType {
 
     /** Routine outpatient consultation. */

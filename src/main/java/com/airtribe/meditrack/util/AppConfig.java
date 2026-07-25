@@ -7,30 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Collections;
 
-/**
- * Application configuration — the <b>eager</b> Singleton.
- *
- * <p>The instance is created during class initialisation, before any thread can request
- * it:</p>
- *
- * <pre>{@code private static final AppConfig INSTANCE = new AppConfig();}</pre>
- *
- * <p><b>Why eager is thread-safe for free.</b> The JVM guarantees class initialisation
- * happens exactly once, under a lock it holds internally. Every thread that reaches
- * {@link #getInstance()} therefore sees a fully-constructed object with no
- * {@code synchronized} keyword anywhere. The trade-off is that the object is built even
- * if never used — acceptable here, because config is cheap and always needed.</p>
- *
- * <p>Contrast with {@link IdGenerator}, which uses the lazy holder idiom for the same
- * guarantee with deferred construction.</p>
- *
- * <p><b>SOLID note.</b> Singletons are global state and can undermine the Dependency
- * Inversion Principle. This one stays defensible because it is read-mostly config with no
- * business behaviour — services depend on their collaborators through constructors, not
- * by reaching for singletons mid-method.</p>
- *
- * @author Sunil (Utils, Storage, Singleton, Docs and Testing)
- */
 public final class AppConfig {
 
     /** Eagerly created — the JVM's class-init lock does the synchronisation for us. */
@@ -70,20 +46,10 @@ public final class AppConfig {
         return INSTANCE;
     }
 
-    // ------------------------------------------------------------------ settings
-    /**
-     * @param key the setting name
-     * @return the value, or {@code null} if unset
-     */
     public String get(String key) {
         return settings.get(key);
     }
 
-    /**
-     * @param key          the setting name
-     * @param defaultValue returned when the key is absent
-     * @return the value or the default
-     */
     public String get(String key, String defaultValue) {
         return settings.getOrDefault(key, defaultValue);
     }
@@ -99,7 +65,6 @@ public final class AppConfig {
         return Collections.unmodifiableMap(settings);
     }
 
-    // -------------------------------------------------------------------- flags
     public boolean isPersistenceEnabled() {
         return persistenceEnabled;
     }

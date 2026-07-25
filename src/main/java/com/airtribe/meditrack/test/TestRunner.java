@@ -46,18 +46,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Hand-rolled test runner — no JUnit, as the assignment requires.
- *
- * <p>Implements the minimum a test framework actually needs: named assertions, a
- * pass/fail tally, exception capture so one failure does not stop the run, and a summary
- * with a non-zero exit code on failure so CI or Docker can gate on it.</p>
- *
- * <p>Run with {@code java -cp out com.airtribe.meditrack.test.TestRunner} or
- * {@code java -cp out com.airtribe.meditrack.Main --runTests}.</p>
- *
- * @author Sunil (Utils, Storage, Singleton, Docs and Testing)
- */
 public class TestRunner {
 
     private static int passed;
@@ -97,8 +85,6 @@ public class TestRunner {
             System.exit(1);
         }
     }
-
-    // ==================================================================== suites
 
     private static void runValidatorTests() {
         suite("Validator — centralised validation");
@@ -1077,8 +1063,6 @@ public class TestRunner {
                 new DoctorService().getMostExpensiveDoctor().isEmpty());
     }
 
-    // ================================================================ framework
-
     private static void suite(String name) {
         currentSuite = name;
         System.out.printf("%n  %s%n  %s%n", name, "-".repeat(Math.max(20, name.length())));
@@ -1194,13 +1178,11 @@ public class TestRunner {
         System.out.println(sb);
     }
 
-    /** A {@link Runnable} that is allowed to throw checked exceptions. */
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;
     }
 
-    /** A {@link java.util.function.Supplier} that is allowed to throw checked exceptions. */
     @FunctionalInterface
     private interface ThrowingSupplier<T> {
         T get() throws Exception;

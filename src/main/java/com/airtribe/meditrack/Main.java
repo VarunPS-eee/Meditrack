@@ -38,24 +38,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
-/**
- * Console entry point for MediTrack.
- *
- * <p>Wires the services together, registers notification channels, and drives a
- * menu-driven UI. Deliberately thin: it reads input, calls a service, prints the result.
- * Every business rule lives behind a service, which is what keeps this class from turning
- * into the god-object that console applications usually become.</p>
- *
- * <h2>Command-line arguments</h2>
- * <ul>
- *   <li>{@code --loadData} — restore patients, doctors and appointments from {@code data/}</li>
- *   <li>{@code --seedDemo} — populate an in-memory demo clinic</li>
- *   <li>{@code --runTests} — run {@link TestRunner} and exit</li>
- *   <li>{@code --help} — print usage and exit</li>
- * </ul>
- *
- * @author Team MediTrack — Varun, Zubair, Sunil
- */
 public class Main {
 
     private final Scanner scanner = new Scanner(System.in);
@@ -90,7 +72,6 @@ public class Main {
         app.start(arguments);
     }
 
-    // ------------------------------------------------------------------ startup
     private void start(List<String> arguments) {
         printBanner();
         registerObservers();
@@ -121,7 +102,6 @@ public class Main {
         scanner.close();
     }
 
-    // -------------------------------------------------------------- main menu
     private void runMainMenu() {
         while (running) {
             printMainMenu();
@@ -156,7 +136,6 @@ public class Main {
                   ============================================================""");
     }
 
-    // ---------------------------------------------------------------- patients
     private void patientMenu() {
         System.out.println("""
 
@@ -243,7 +222,6 @@ public class Main {
         }
     }
 
-    // ----------------------------------------------------------------- doctors
     private void doctorMenu() {
         System.out.println("""
 
@@ -345,7 +323,6 @@ public class Main {
         doctors.forEach(Doctor::displayDetails);
     }
 
-    // ------------------------------------------------------------ appointments
     private void appointmentMenu() {
         System.out.println("""
 
@@ -449,7 +426,6 @@ public class Main {
         }
     }
 
-    // ----------------------------------------------------------------- billing
     private void billingMenu() {
         System.out.println("""
 
@@ -551,7 +527,6 @@ public class Main {
         }
     }
 
-    // ------------------------------------------------------------------ search
     private void searchMenu() {
         System.out.println("""
 
@@ -605,7 +580,6 @@ public class Main {
         }
     }
 
-    // ---------------------------------------------------------------------- AI
     private void aiMenu() {
         System.out.println("""
 
@@ -654,7 +628,6 @@ public class Main {
         }, () -> System.out.println("  No such patient."));
     }
 
-    // ----------------------------------------------------------------- reports
     private void reportsMenu() {
         System.out.println("""
 
@@ -761,7 +734,6 @@ public class Main {
         }
     }
 
-    // ----------------------------------------------------------- data & config
     private void dataMenu() {
         System.out.println("""
 
@@ -825,7 +797,6 @@ public class Main {
         }
     }
 
-    // --------------------------------------------------------- demonstrations
     private void demonstrationsMenu() {
         System.out.println("""
 
@@ -920,7 +891,6 @@ public class Main {
         IdGenerator.getInstance().printCounters();
     }
 
-    // ------------------------------------------------------------------ helpers
     private String readLine(String prompt) {
         System.out.print(prompt);
         return scanner.hasNextLine() ? scanner.nextLine().trim() : "0";

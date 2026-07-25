@@ -4,24 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Someone receiving care at the clinic.
- *
- * <p>This class is the project's <b>deep vs shallow copy</b> demonstration. It holds a
- * mutable {@code List<String>} of medical history, which is exactly the situation where
- * {@link Object#clone()}'s default behaviour goes wrong: the default copies the
- * <em>reference</em> to the list, so the "copy" and the original share one list and
- * edits to either are visible in both.</p>
- *
- * <p>Two copy methods are provided side by side so the difference can be observed
- * rather than asserted:</p>
- * <ul>
- *   <li>{@link #shallowCopy()} — {@code super.clone()} only. Shares the history list.</li>
- *   <li>{@link #clone()} — copies the lists too. Fully independent.</li>
- * </ul>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public class Patient extends Person implements Cloneable {
 
     private static final long serialVersionUID = 1L;
@@ -44,18 +26,6 @@ public class Patient extends Person implements Cloneable {
                 new ArrayList<>(), null, false);
     }
 
-    /**
-     * Canonical constructor.
-     *
-     * @param id             business key
-     * @param name           full name
-     * @param age            age in years
-     * @param contactNumber  contact number
-     * @param medicalHistory prior conditions and notes
-     * @param allergies      known allergies
-     * @param bloodGroup     blood group, e.g. {@code O+}
-     * @param insured        whether the patient carries insurance
-     */
     public Patient(String id, String name, int age, String contactNumber,
                    List<String> medicalHistory, List<String> allergies,
                    String bloodGroup, boolean insured) {
@@ -67,7 +37,6 @@ public class Patient extends Person implements Cloneable {
         this.insured = insured;
     }
 
-    // --------------------------------------------------------------- accessors
     /** @return an unmodifiable view — callers can read the history but not corrupt it */
     public List<String> getMedicalHistory() {
         return Collections.unmodifiableList(medicalHistory);
@@ -119,17 +88,6 @@ public class Patient extends Person implements Cloneable {
         touch();
     }
 
-    // ------------------------------------------------------------ copy semantics
-    /**
-     * <b>Deep copy.</b> Clones the object, then replaces every mutable reference field
-     * with a fresh copy of its own. The result shares no mutable state with the original.
-     *
-     * <p>Immutable fields ({@code String}, {@code int}, {@code boolean}) need no special
-     * handling — that is the whole point of immutability.</p>
-     *
-     * @return a fully independent copy
-     * @throws CloneNotSupportedException never, in practice — declared to honour the contract
-     */
     @Override
     public Patient clone() throws CloneNotSupportedException {
         Patient copy = (Patient) super.clone();   // step 1: bitwise field copy
@@ -138,22 +96,10 @@ public class Patient extends Person implements Cloneable {
         return copy;
     }
 
-    /**
-     * <b>Shallow copy.</b> Deliberately stops after {@code super.clone()}, so the returned
-     * patient shares the <em>same</em> history and allergy lists as this one.
-     *
-     * <p>Kept in the codebase purely to make the failure mode demonstrable in
-     * {@code TestRunner}: mutate the original's history and the shallow copy changes too,
-     * while the deep copy does not.</p>
-     *
-     * @return a copy that shares this patient's mutable collections
-     * @throws CloneNotSupportedException never, in practice
-     */
     public Patient shallowCopy() throws CloneNotSupportedException {
         return (Patient) super.clone();
     }
 
-    // --------------------------------------------------------------- behaviour
     @Override
     public String getEntityType() {
         return "Patient";

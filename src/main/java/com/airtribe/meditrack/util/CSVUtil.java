@@ -22,23 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * CSV reading and writing for patients, doctors and appointments.
- *
- * <h2>try-with-resources</h2>
- * <p>Every file operation here opens its reader or writer in a try-with-resources header.
- * The resource is closed automatically on both the success and the exception path, which
- * is what the old {@code finally { if (r != null) r.close(); }} dance existed to achieve —
- * and frequently got wrong.</p>
- *
- * <h2>Escaping</h2>
- * <p>Fields are split on {@code ,} with {@code String.split(",")} as the assignment
- * requires. Because a medical-history entry can legitimately contain a comma, values are
- * escaped on the way out — commas become {@code ||} — and unescaped on the way back in.
- * A blunt split would otherwise shift every subsequent column.</p>
- *
- * @author Sunil (Utils, Storage, Singleton, Docs and Testing)
- */
 public final class CSVUtil {
 
     public static final String PATIENT_HEADER =
@@ -52,13 +35,6 @@ public final class CSVUtil {
         throw new AssertionError("CSVUtil is a utility class and must not be instantiated.");
     }
 
-    // ------------------------------------------------------------------ escaping
-    /**
-     * Makes a value safe to place between commas.
-     *
-     * @param value the raw value, may be {@code null}
-     * @return the escaped value, never {@code null}
-     */
     public static String escape(String value) {
         if (value == null) {
             return "";
@@ -66,12 +42,6 @@ public final class CSVUtil {
         return value.replace(",", "||").replace("\n", " ").replace("\r", " ").trim();
     }
 
-    /**
-     * Reverses {@link #escape(String)}.
-     *
-     * @param value the escaped value
-     * @return the original value, or {@code null} if blank
-     */
     public static String unescape(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -79,12 +49,6 @@ public final class CSVUtil {
         return value.replace("||", ",").trim();
     }
 
-    /**
-     * Joins a list into one CSV cell using {@code ;}.
-     *
-     * @param values the values to join
-     * @return the joined, escaped cell
-     */
     public static String joinList(List<String> values) {
         if (values == null || values.isEmpty()) {
             return "";
@@ -92,12 +56,6 @@ public final class CSVUtil {
         return escape(String.join(Constants.LIST_DELIMITER, values));
     }
 
-    /**
-     * Splits a {@code ;}-joined cell back into a list.
-     *
-     * @param cell the cell contents
-     * @return the parsed values, never {@code null}
-     */
     public static List<String> splitList(String cell) {
         String unescaped = unescape(cell);
         if (unescaped == null || unescaped.isBlank()) {
@@ -106,15 +64,6 @@ public final class CSVUtil {
         return new ArrayList<>(Arrays.asList(unescaped.split(Constants.LIST_DELIMITER)));
     }
 
-    // -------------------------------------------------------------------- write
-    /**
-     * Writes a header plus rows to a CSV file, creating the directory if needed.
-     *
-     * @param filePath where to write
-     * @param header   the header line
-     * @param rows     the data lines
-     * @throws DataPersistenceException if the write fails
-     */
     public static void writeLines(String filePath, String header, List<String> rows)
             throws DataPersistenceException {
         ensureParentDirectory(filePath);
@@ -132,13 +81,6 @@ public final class CSVUtil {
         }
     }
 
-    /**
-     * Reads every data line from a CSV file, skipping the header.
-     *
-     * @param filePath the file to read
-     * @return the data lines; empty if the file does not exist
-     * @throws DataPersistenceException if the file exists but cannot be read
-     */
     public static List<String> readLines(String filePath) throws DataPersistenceException {
         List<String> lines = new ArrayList<>();
         Path path = Paths.get(filePath);
@@ -163,11 +105,6 @@ public final class CSVUtil {
         return lines;
     }
 
-    // ------------------------------------------------------------------ patients
-    /**
-     * @param patient the patient to serialise
-     * @return one CSV row
-     */
     public static String toCsvRow(Patient patient) {
         return String.join(Constants.CSV_DELIMITER,
                 escape(patient.getId()),
@@ -180,12 +117,6 @@ public final class CSVUtil {
                 joinList(patient.getAllergies()));
     }
 
-    /**
-     * Parses a patient row.
-     *
-     * @param row the CSV line
-     * @return the patient, or {@code null} if the row is malformed
-     */
     public static Patient patientFromCsvRow(String row) {
         String[] f = row.split(Constants.CSV_DELIMITER, -1);
         if (f.length < 8) {
@@ -216,11 +147,6 @@ public final class CSVUtil {
         return parseAll(readLines(filePath), CSVUtil::patientFromCsvRow);
     }
 
-    // ------------------------------------------------------------------- doctors
-    /**
-     * @param doctor the doctor to serialise
-     * @return one CSV row
-     */
     public static String toCsvRow(Doctor doctor) {
         return String.join(Constants.CSV_DELIMITER,
                 escape(doctor.getId()),
@@ -234,12 +160,6 @@ public final class CSVUtil {
                 String.valueOf(doctor.isAvailable()));
     }
 
-    /**
-     * Parses a doctor row.
-     *
-     * @param row the CSV line
-     * @return the doctor, or {@code null} if the row is malformed
-     */
     public static Doctor doctorFromCsvRow(String row) {
         String[] f = row.split(Constants.CSV_DELIMITER, -1);
         if (f.length < 9) {
@@ -271,15 +191,6 @@ public final class CSVUtil {
         return parseAll(readLines(filePath), CSVUtil::doctorFromCsvRow);
     }
 
-    // -------------------------------------------------------------- appointments
-    /**
-     * Appointments store only the <em>ids</em> of their patient and doctor, not nested
-     * copies. Flattening the object graph this way is what keeps CSV workable — the
-     * service layer re-links the references after loading.
-     *
-     * @param appointment the appointment to serialise
-     * @return one CSV row
-     */
     public static String toCsvRow(Appointment appointment) {
         return String.join(Constants.CSV_DELIMITER,
                 escape(appointment.getId()),
@@ -291,14 +202,6 @@ public final class CSVUtil {
                 escape(appointment.getNotes()));
     }
 
-    /**
-     * Parses an appointment row and re-links it to the supplied entities.
-     *
-     * @param row      the CSV line
-     * @param patients patients by id, for re-linking
-     * @param doctors  doctors by id, for re-linking
-     * @return the appointment, or {@code null} if malformed or referencing missing entities
-     */
     public static Appointment appointmentFromCsvRow(String row,
                                                     Map<String, Patient> patients,
                                                     Map<String, Doctor> doctors) {
@@ -330,15 +233,6 @@ public final class CSVUtil {
         writeLines(filePath, APPOINTMENT_HEADER, mapAll(appointments, CSVUtil::toCsvRow));
     }
 
-    /**
-     * Reads appointments and re-links them against the given patients and doctors.
-     *
-     * @param filePath the file to read
-     * @param patients patients by id
-     * @param doctors  doctors by id
-     * @return the loaded appointments; rows referencing unknown ids are skipped
-     * @throws DataPersistenceException if the file cannot be read
-     */
     public static List<Appointment> readAppointments(String filePath,
                                                      Map<String, Patient> patients,
                                                      Map<String, Doctor> doctors)
@@ -353,7 +247,6 @@ public final class CSVUtil {
         return appointments;
     }
 
-    // ------------------------------------------------------------------ helpers
     private static <E> List<String> mapAll(List<E> items, Function<E, String> mapper) {
         List<String> rows = new ArrayList<>(items.size());
         for (E item : items) {

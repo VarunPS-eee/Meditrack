@@ -12,38 +12,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Abstract base for every kind of bill — the project's <b>Template Method</b> pattern.
- *
- * <p>{@link #generateBill()} is {@code final}: the <em>sequence</em> of billing steps is
- * a business invariant and no subclass may reorder it, skip the tax step, or forget to
- * record a total. What each subclass may change is the content of individual steps:</p>
- *
- * <table border="1">
- *   <caption>Template steps</caption>
- *   <tr><th>Step</th><th>Kind</th><th>Who decides</th></tr>
- *   <tr><td>{@link #calculateBaseAmount()}</td><td>abstract</td><td>subclass must implement</td></tr>
- *   <tr><td>{@link #applyStrategy(double)}</td><td>concrete</td><td>injected {@link BillingStrategy}</td></tr>
- *   <tr><td>{@link #applySurcharge(double)}</td><td>hook</td><td>subclass may override; default no-op</td></tr>
- *   <tr><td>{@link #calculateTax(double)}</td><td>hook</td><td>subclass may override; default GST</td></tr>
- * </table>
- *
- * <p>The net effect is polymorphic billing: three {@code Bill} references, one call to
- * {@code generateBill()}, three different totals — resolved at run time by dynamic
- * dispatch into the overridden steps.</p>
- *
- * <p>Also implements {@link Payable}, so a bill can be paid down incrementally.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public abstract class Bill extends MedicalEntity implements Payable {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * One charged item on a bill. A nested, immutable value type — it has no identity
-     * of its own and exists only as part of its enclosing {@code Bill}.
-     */
     public static final class LineItem implements Serializable {
 
         private static final long serialVersionUID = 1L;
@@ -103,20 +75,11 @@ public abstract class Bill extends MedicalEntity implements Payable {
         }
     }
 
-    // ------------------------------------------------------------------- state
     private final Patient patient;
     private final String appointmentId;
     private final LocalDateTime billDate;
     private final List<LineItem> lineItems;
 
-    /**
-     * Injected pricing policy — the Strategy.
-     *
-     * <p>Marked {@code transient} because a strategy is behaviour, not data: it is often
-     * supplied as a lambda, which is not {@link Serializable}. On reload the bill keeps
-     * its already-computed totals and {@link #applyStrategy(double)} falls back to
-     * identity, so a deserialized bill never silently reprices itself.</p>
-     */
     private transient BillingStrategy billingStrategy;
 
     private double amountPaid;
@@ -129,12 +92,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
     private double totalAmount;
     private boolean generated;
 
-    /**
-     * @param billId        business key
-     * @param patient       who is being charged
-     * @param appointmentId the appointment this bill settles, may be {@code null}
-     * @param strategy      the pricing policy to apply
-     */
     protected Bill(String billId, Patient patient, String appointmentId, BillingStrategy strategy) {
         super(billId);
         this.patient = patient;
@@ -145,15 +102,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
         this.amountPaid = 0.0;
     }
 
-    // --------------------------------------------------------- template method
-    /**
-     * <b>The template method.</b> Runs the billing algorithm in a fixed order and
-     * returns an immutable snapshot of the result.
-     *
-     * <p>{@code final} on purpose — subclasses customise the steps, never the sequence.</p>
-     *
-     * @return an immutable {@link BillSummary} of the computed bill
-     */
     public final BillSummary generateBill() {
         // Step 1 — what is being charged for (subclass decides).
         this.baseAmount = calculateBaseAmount();
@@ -177,41 +125,16 @@ public abstract class Bill extends MedicalEntity implements Payable {
         return toSummary();
     }
 
-    /**
-     * Step 1 — the pre-policy charge. Every bill type must answer this.
-     *
-     * @return the base amount before policy, surcharge and tax
-     */
     protected abstract double calculateBaseAmount();
 
-    /**
-     * Step 2 — delegates to the injected {@link BillingStrategy}.
-     *
-     * @param base the amount from step 1
-     * @return the policy-adjusted amount
-     */
     protected double applyStrategy(double base) {
         return billingStrategy == null ? base : billingStrategy.calculate(base);
     }
 
-    /**
-     * Step 3 — <b>hook</b>. Default implementation adds no surcharge; subclasses that
-     * need one (e.g. {@link EmergencyBill}) override it.
-     *
-     * @param amount the policy-adjusted amount
-     * @return the surcharge to add, {@code 0.0} by default
-     */
     protected double applySurcharge(double amount) {
         return 0.0;
     }
 
-    /**
-     * Step 4 — <b>hook</b>. Default is the flat GST rate from
-     * {@link Constants#TAX_RATE}; a subclass may override to apply a different regime.
-     *
-     * @param taxableAmount the amount tax is charged on
-     * @return the tax component
-     */
     protected double calculateTax(double taxableAmount) {
         return taxableAmount * Constants.TAX_RATE;
     }
@@ -221,7 +144,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
      */
     public abstract String getBillDescription();
 
-    // ------------------------------------------------------------------ payable
     @Override
     public double getAmountDue() {
         ensureGenerated();
@@ -233,13 +155,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
         return amountPaid;
     }
 
-    /**
-     * Records a payment. Rejects non-positive amounts and anything above the
-     * outstanding balance, so a bill can never go into credit.
-     *
-     * @param amount the amount tendered
-     * @return {@code true} if accepted
-     */
     @Override
     public boolean processPayment(double amount) {
         if (amount <= 0 || amount > getAmountDue() + 0.0001) {
@@ -250,7 +165,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
         return true;
     }
 
-    // ------------------------------------------------------------- line items
     public void addLineItem(LineItem item) {
         if (item != null) {
             lineItems.add(item);
@@ -276,7 +190,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
         return lineItems.stream().mapToDouble(LineItem::getLineTotal).sum();
     }
 
-    // -------------------------------------------------------------- accessors
     public Patient getPatient() {
         return patient;
     }
@@ -334,7 +247,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
         }
     }
 
-    // ---------------------------------------------------------------- output
     /**
      * @return an immutable snapshot of this bill, safe to hand to any caller
      */
@@ -354,16 +266,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
                 lineItems);
     }
 
-    /**
-     * Renders the printable bill.
-     *
-     * <p>Built with a single {@link StringBuilder} rather than repeated {@code +}
-     * concatenation: this method appends ~20 fragments in a loop, and {@code +} inside
-     * a loop allocates a fresh {@code String} on every iteration. One mutable buffer,
-     * one final {@code toString()}.</p>
-     *
-     * @return the full bill as printable text
-     */
     public String getFormattedBill() {
         StringBuilder sb = new StringBuilder(512);
         String line = "=".repeat(62);
@@ -429,7 +331,6 @@ public abstract class Bill extends MedicalEntity implements Payable {
         return text.length() <= max ? text : text.substring(0, max - 1) + "…";
     }
 
-    // -------------------------------------------------------------- behaviour
     @Override
     public String getEntityType() {
         return "Bill";

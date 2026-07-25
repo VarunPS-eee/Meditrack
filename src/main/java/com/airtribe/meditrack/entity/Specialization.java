@@ -5,19 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Medical specialities a doctor can hold.
- *
- * <p>Demonstrates that a Java enum is a full class: it carries fields, a constructor,
- * instance methods and static helpers. Using this instead of {@code String} makes
- * invalid specialities <em>unrepresentable</em> rather than merely discouraged.</p>
- *
- * <p>Each constant also carries the symptom keywords used by
- * {@code AIHelper} for rule-based doctor recommendation, which keeps the mapping
- * next to the speciality it describes rather than in a far-away lookup table.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public enum Specialization {
 
     CARDIOLOGY("Cardiology", 1200.0,
@@ -66,13 +53,6 @@ public enum Specialization {
         return symptomKeywords;
     }
 
-    /**
-     * Scores how well a free-text symptom description matches this speciality.
-     * Used by the AI helper to rank recommendations.
-     *
-     * @param symptomText the patient's described symptoms
-     * @return number of keywords found in the text; {@code 0} means no match
-     */
     public int scoreAgainst(String symptomText) {
         if (symptomText == null || symptomText.isBlank()) {
             return 0;
@@ -87,15 +67,6 @@ public enum Specialization {
         return score;
     }
 
-    /**
-     * Null-safe, case-insensitive lookup that also accepts the display name.
-     *
-     * <p>Returns an {@link Optional} rather than throwing, so callers decide how a
-     * bad speciality string should be handled.</p>
-     *
-     * @param value user input such as {@code "cardiology"} or {@code "General Practice"}
-     * @return the matching constant, if any
-     */
     public static Optional<Specialization> fromString(String value) {
         if (value == null || value.isBlank()) {
             return Optional.empty();

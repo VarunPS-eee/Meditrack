@@ -3,12 +3,6 @@ package com.airtribe.meditrack.strategy;
 import com.airtribe.meditrack.constants.Constants;
 import com.airtribe.meditrack.interfaces.BillingStrategy;
 
-/**
- * Concessional pricing for patients aged {@value com.airtribe.meditrack.constants.Constants#SENIOR_CITIZEN_AGE}
- * and above.
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public class SeniorCitizenBillingStrategy implements BillingStrategy {
 
     private final double discountRate;

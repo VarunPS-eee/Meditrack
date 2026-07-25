@@ -18,15 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * All doctor use-cases: roster management, search and fee analytics.
- *
- * <p>The analytics methods at the bottom are where <b>streams and lambdas</b> earn their
- * place: {@link #getAverageFeeBySpecialization()} would be a nested-loop-plus-map
- * accumulation written imperatively, and reads as one declarative pipeline here.</p>
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public class DoctorService {
 
     private final DataStore<Doctor> store;
@@ -41,19 +32,6 @@ public class DoctorService {
         this.idGenerator = IdGenerator.getInstance();
     }
 
-    // -------------------------------------------------------------------- create
-    /**
-     * Adds a doctor to the roster.
-     *
-     * @param name              full name
-     * @param age               age in years
-     * @param contactNumber     contact number
-     * @param specialization    speciality
-     * @param consultationFee   fee per consultation
-     * @param yearsOfExperience years in practice
-     * @return the newly created doctor
-     * @throws InvalidDataException if any field fails validation
-     */
     public Doctor addDoctor(String name, int age, String contactNumber,
                             Specialization specialization, double consultationFee,
                             int yearsOfExperience) throws InvalidDataException {
@@ -83,16 +61,10 @@ public class DoctorService {
         return store.save(doctor);
     }
 
-    // ---------------------------------------------------------------------- read
     public Optional<Doctor> findById(String id) {
         return store.findById(id);
     }
 
-    /**
-     * @param id the doctor id
-     * @return the doctor
-     * @throws EntityNotFoundException if no doctor has that id
-     */
     public Doctor getById(String id) throws EntityNotFoundException {
         return store.getById(id);
     }
@@ -105,33 +77,14 @@ public class DoctorService {
         return store.count();
     }
 
-    // ------------------------------------------------------------------- search
-    /**
-     * Overload 1 — free-text search across id, name and speciality.
-     *
-     * @param keyword the search term
-     * @return the matching doctors
-     */
     public List<Doctor> searchDoctor(String keyword) {
         return store.search(keyword);
     }
 
-    /**
-     * Overload 2 — exact speciality match.
-     *
-     * @param specialization the speciality to filter on
-     * @return doctors holding that speciality
-     */
     public List<Doctor> searchDoctor(Specialization specialization) {
         return store.findBy(d -> d.getSpecialization() == specialization);
     }
 
-    /**
-     * Overload 3 — doctors at or under a fee ceiling.
-     *
-     * @param maxFee the highest acceptable fee
-     * @return matching doctors, cheapest first
-     */
     public List<Doctor> searchDoctor(double maxFee) {
         return store.stream()
                 .filter(d -> d.getConsultationFee() <= maxFee)
@@ -139,13 +92,6 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Overload 4 — speciality plus minimum experience.
-     *
-     * @param specialization    required speciality
-     * @param minYearsExperience minimum years in practice
-     * @return matching doctors, most experienced first
-     */
     public List<Doctor> searchDoctor(Specialization specialization, int minYearsExperience) {
         return store.stream()
                 .filter(d -> d.getSpecialization() == specialization)
@@ -159,10 +105,6 @@ public class DoctorService {
         return store.findBy(Doctor::isAvailable);
     }
 
-    /**
-     * @param specialization the speciality required
-     * @return available doctors in that speciality, best-rated first
-     */
     public List<Doctor> getAvailableBySpecialization(Specialization specialization) {
         return store.stream()
                 .filter(Doctor::isAvailable)
@@ -171,18 +113,6 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
 
-    // -------------------------------------------------------------------- update
-    /**
-     * Updates a doctor's mutable details; {@code null} arguments are left unchanged.
-     *
-     * @param id              the doctor to update
-     * @param name            new name, or {@code null}
-     * @param consultationFee new fee, or {@code null}
-     * @param available       new availability, or {@code null}
-     * @return the updated doctor
-     * @throws EntityNotFoundException if no doctor has that id
-     * @throws InvalidDataException    if a supplied value fails validation
-     */
     public Doctor updateDoctor(String id, String name, Double consultationFee, Boolean available)
             throws EntityNotFoundException, InvalidDataException {
         Doctor doctor = store.getById(id);
@@ -199,13 +129,6 @@ public class DoctorService {
         return store.save(doctor);
     }
 
-    /**
-     * Records a patient rating, clamped to 0–5 and averaged with the existing score.
-     *
-     * @param id     the doctor rated
-     * @param rating the new rating
-     * @throws EntityNotFoundException if no doctor has that id
-     */
     public void rateDoctor(String id, double rating) throws EntityNotFoundException {
         Doctor doctor = store.getById(id);
         double clamped = Math.clamp(rating, 0.0, 5.0);
@@ -213,21 +136,10 @@ public class DoctorService {
         doctor.setRating(current == 0.0 ? clamped : (current + clamped) / 2.0);
     }
 
-    // -------------------------------------------------------------------- delete
     public boolean deleteDoctor(String id) {
         return store.deleteById(id);
     }
 
-    // ------------------------------------------------------- streams & analytics
-    /**
-     * Mean consultation fee per speciality.
-     *
-     * <p>{@code groupingBy} + {@code averagingDouble} — a two-level reduction expressed
-     * as one pipeline. {@link java.util.TreeMap} keeps the output in enum order so the
-     * report reads the same on every run.</p>
-     *
-     * @return speciality to average fee
-     */
     public Map<Specialization, Double> getAverageFeeBySpecialization() {
         return store.stream()
                 .filter(d -> d.getSpecialization() != null)
@@ -263,10 +175,6 @@ public class DoctorService {
                         Collectors.counting()));
     }
 
-    /**
-     * @param limit how many to return
-     * @return the highest-rated doctors
-     */
     public List<Doctor> getTopRatedDoctors(int limit) {
         return store.stream()
                 .sorted(Doctor.BY_RATING)
@@ -294,7 +202,6 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
 
-    // ------------------------------------------------------------- persistence
     public void saveToFile() throws DataPersistenceException {
         CSVUtil.writeDoctors(Constants.DOCTORS_FILE, store.findAll());
     }

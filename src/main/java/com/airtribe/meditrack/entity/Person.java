@@ -2,21 +2,6 @@ package com.airtribe.meditrack.entity;
 
 import com.airtribe.meditrack.constants.Constants;
 
-/**
- * A human being known to the clinic — the shared parent of {@link Doctor} and {@link Patient}.
- *
- * <p><b>Inheritance.</b> {@code Person} sits between {@link MedicalEntity} and the
- * concrete roles, holding what every person has (name, age, contact) and nothing about
- * what they <em>do</em>. It stays {@code abstract} because a bare "person" is not a
- * thing the clinic can act on, and it deliberately does not implement
- * {@link MedicalEntity#displayDetails()} — that stays the subclass's job.</p>
- *
- * <p><b>Constructor chaining.</b> The 4-arg constructor delegates to the 5-arg one with
- * {@code this(...)}, which in turn calls {@code super(id)}. One initialisation path,
- * no duplicated field assignment.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public abstract class Person extends MedicalEntity {
 
     private static final long serialVersionUID = 1L;
@@ -26,27 +11,10 @@ public abstract class Person extends MedicalEntity {
     private String contactNumber;
     private String email;
 
-    /**
-     * Convenience constructor — delegates rather than duplicating.
-     *
-     * @param id            business key
-     * @param name          full name
-     * @param age           age in years
-     * @param contactNumber 10-digit contact number
-     */
     protected Person(String id, String name, int age, String contactNumber) {
         this(id, name, age, contactNumber, null);
     }
 
-    /**
-     * Canonical constructor — the single place where a {@code Person}'s fields are set.
-     *
-     * @param id            business key
-     * @param name          full name
-     * @param age           age in years
-     * @param contactNumber 10-digit contact number
-     * @param email         optional email address
-     */
     protected Person(String id, String name, int age, String contactNumber, String email) {
         super(id); // chain up to MedicalEntity
         this.name = name;
@@ -55,7 +23,6 @@ public abstract class Person extends MedicalEntity {
         this.email = email;
     }
 
-    // ---------------------------------------------------------------- encapsulation
     public String getName() {
         return name;
     }
@@ -92,7 +59,6 @@ public abstract class Person extends MedicalEntity {
         touch();
     }
 
-    // ------------------------------------------------------------------- behaviour
     /**
      * @return {@code true} if this person qualifies for the senior-citizen concession
      */
@@ -114,12 +80,6 @@ public abstract class Person extends MedicalEntity {
         return "SENIOR";
     }
 
-    /**
-     * Masks all but the last four digits before printing, so a console screenshot
-     * pasted into a PR does not leak a real phone number.
-     *
-     * @return e.g. {@code ******3210}
-     */
     public String getMaskedContactNumber() {
         if (contactNumber == null || contactNumber.length() < 4) {
             return "N/A";
@@ -128,10 +88,6 @@ public abstract class Person extends MedicalEntity {
                 + contactNumber.substring(contactNumber.length() - 4);
     }
 
-    /**
-     * Base searchable text every person contributes. Subclasses override and call
-     * {@code super.getSearchableText()} to add their own fields.
-     */
     @Override
     public String getSearchableText() {
         return String.join(" ",

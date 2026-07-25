@@ -8,18 +8,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * A booked consultation slot linking one {@link Patient} to one {@link Doctor}.
- *
- * <p>Also {@link Cloneable}, and a more interesting deep-copy case than {@link Patient}:
- * it holds references to <em>other entities</em>. The clone deep-copies the patient
- * (whose history is per-appointment context) but deliberately <b>shares</b> the doctor
- * reference — a doctor is a single clinic-wide entity, and duplicating them on every
- * appointment copy would be wrong, not merely wasteful. Deep copy is a judgement call
- * about ownership, not a blanket rule.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public class Appointment extends MedicalEntity implements Cloneable {
 
     private static final long serialVersionUID = 1L;
@@ -39,27 +27,10 @@ public class Appointment extends MedicalEntity implements Cloneable {
     private List<String> symptoms;
     private String notes;
 
-    /**
-     * @param appointmentId business key
-     * @param patient       the patient attending
-     * @param doctor        the doctor consulting
-     * @param slot          the scheduled date and time
-     */
     public Appointment(String appointmentId, Patient patient, Doctor doctor, LocalDateTime slot) {
         this(appointmentId, patient, doctor, slot, AppointmentStatus.PENDING, new ArrayList<>(), null);
     }
 
-    /**
-     * Canonical constructor.
-     *
-     * @param appointmentId business key
-     * @param patient       the patient attending
-     * @param doctor        the doctor consulting
-     * @param slot          the scheduled date and time
-     * @param status        initial status
-     * @param symptoms      reported symptoms
-     * @param notes         free-text clinical notes
-     */
     public Appointment(String appointmentId, Patient patient, Doctor doctor, LocalDateTime slot,
                        AppointmentStatus status, List<String> symptoms, String notes) {
         super(appointmentId);
@@ -71,8 +42,6 @@ public class Appointment extends MedicalEntity implements Cloneable {
         this.notes = notes;
     }
 
-    // --------------------------------------------------------------- accessors
-    /** Alias for {@link #getId()}, kept because callers read better with the domain name. */
     public String getAppointmentId() {
         return getId();
     }
@@ -133,14 +102,6 @@ public class Appointment extends MedicalEntity implements Cloneable {
         touch();
     }
 
-    // ------------------------------------------------------------ state machine
-    /**
-     * Moves this appointment to a new status, but only if the enum's state machine
-     * permits it. Invalid moves are rejected rather than silently applied.
-     *
-     * @param target the desired status
-     * @return {@code true} if the transition happened
-     */
     public boolean transitionTo(AppointmentStatus target) {
         if (!status.canTransitionTo(target)) {
             return false;
@@ -176,20 +137,6 @@ public class Appointment extends MedicalEntity implements Cloneable {
         return doctor == null ? 0.0 : doctor.getConsultationFee();
     }
 
-    // ------------------------------------------------------------ copy semantics
-    /**
-     * <b>Deep copy, selectively applied.</b>
-     *
-     * <ul>
-     *   <li>{@code patient} — deep copied; each appointment owns its snapshot.</li>
-     *   <li>{@code doctor} — <em>shared by reference</em>; the clinic has one of them.</li>
-     *   <li>{@code symptoms} — deep copied; a mutable list we own.</li>
-     *   <li>{@code slot}, {@code status}, {@code notes} — immutable, so sharing is safe.</li>
-     * </ul>
-     *
-     * @return a copy safe to mutate without disturbing this appointment
-     * @throws CloneNotSupportedException never, in practice
-     */
     @Override
     public Appointment clone() throws CloneNotSupportedException {
         Appointment copy = (Appointment) super.clone();
@@ -201,7 +148,6 @@ public class Appointment extends MedicalEntity implements Cloneable {
         return copy;
     }
 
-    // --------------------------------------------------------------- behaviour
     @Override
     public String getEntityType() {
         return "Appointment";

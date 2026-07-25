@@ -4,20 +4,10 @@ import com.airtribe.meditrack.interfaces.Payable;
 
 import java.util.Comparator;
 
-/**
- * A practising clinician.
- *
- * <p>Demonstrates <b>method overriding</b> ({@link #displayDetails()},
- * {@link #getSearchableText()}) and supplies reusable {@link Comparator} constants so
- * callers can sort doctors without every call site rewriting the comparison.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public class Doctor extends Person {
 
     private static final long serialVersionUID = 1L;
 
-    // ------------------------------------------------------------- comparators
     /** Cheapest first. */
     public static final Comparator<Doctor> BY_FEE =
             Comparator.comparingDouble(Doctor::getConsultationFee);
@@ -36,22 +26,12 @@ public class Doctor extends Person {
                     .thenComparing(BY_EXPERIENCE)
                     .thenComparing(BY_NAME);
 
-    // ------------------------------------------------------------------- state
     private Specialization specialization;
     private double consultationFee;
     private int yearsOfExperience;
     private double rating;
     private boolean available;
 
-    /**
-     * Convenience constructor — defaults the fee to the speciality's base rate.
-     *
-     * @param id             business key
-     * @param name           full name
-     * @param age            age in years
-     * @param contactNumber  contact number
-     * @param specialization the doctor's speciality
-     */
     public Doctor(String id, String name, int age, String contactNumber, Specialization specialization) {
         this(id, name, age, contactNumber, specialization,
                 specialization == null ? 0.0 : specialization.getBaseConsultationFee(), 0, 0.0);
@@ -63,18 +43,6 @@ public class Doctor extends Person {
         this(id, name, age, contactNumber, specialization, consultationFee, 0, 0.0);
     }
 
-    /**
-     * Canonical constructor.
-     *
-     * @param id                business key
-     * @param name              full name
-     * @param age               age in years
-     * @param contactNumber     contact number
-     * @param specialization    the doctor's speciality
-     * @param consultationFee   fee per consultation
-     * @param yearsOfExperience years in practice
-     * @param rating            patient rating, 0.0–5.0
-     */
     public Doctor(String id, String name, int age, String contactNumber,
                   Specialization specialization, double consultationFee,
                   int yearsOfExperience, double rating) {
@@ -86,7 +54,6 @@ public class Doctor extends Person {
         this.available = true;
     }
 
-    // --------------------------------------------------------------- accessors
     public Specialization getSpecialization() {
         return specialization;
     }
@@ -132,13 +99,6 @@ public class Doctor extends Person {
         touch();
     }
 
-    // --------------------------------------------------------------- behaviour
-    /**
-     * Seniority band derived from years in practice — used by the AI helper when
-     * ranking equally-matched doctors.
-     *
-     * @return {@code JUNIOR}, {@code MID}, {@code SENIOR} or {@code CONSULTANT}
-     */
     public String getSeniorityBand() {
         if (yearsOfExperience < 3) {
             return "JUNIOR";
@@ -163,10 +123,6 @@ public class Doctor extends Person {
                 + " " + getSeniorityBand();
     }
 
-    /**
-     * <b>Overriding + dynamic dispatch.</b> Called through a {@code MedicalEntity}
-     * reference, this version runs — not {@link Patient}'s.
-     */
     @Override
     public void displayDetails() {
         StringBuilder sb = new StringBuilder(160);

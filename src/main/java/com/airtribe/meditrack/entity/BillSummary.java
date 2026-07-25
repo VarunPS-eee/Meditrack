@@ -9,35 +9,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * An immutable, thread-safe snapshot of a generated {@link Bill}.
- *
- * <p>This is the project's reference <b>immutable class</b>. Every rule is applied
- * deliberately:</p>
- *
- * <ol>
- *   <li><b>{@code final} class</b> — no subclass can add mutable state or override a
- *       getter to return something different on the second call.</li>
- *   <li><b>All fields {@code private final}</b> — assigned once, in the constructor.</li>
- *   <li><b>No setters</b> — and no method that mutates anything.</li>
- *   <li><b>Defensive copy in</b> — the incoming {@code List<LineItem>} is copied, so a
- *       caller holding the original list cannot reach in and change our state
- *       afterwards.</li>
- *   <li><b>Defensive copy / unmodifiable view out</b> — {@link #getLineItems()} returns
- *       a view that throws on mutation rather than the live list.</li>
- * </ol>
- *
- * <p><b>Why this is thread-safe.</b> The fields are {@code final} and are set before the
- * constructor returns, so the Java Memory Model guarantees any thread that sees a
- * reference to this object also sees fully-initialised fields — no synchronisation, no
- * volatile, no locks. There is no state to race on. This is why the reminder thread can
- * read summaries while the main thread bills, with no coordination at all.</p>
- *
- * <p>{@link Bill.LineItem} is itself immutable, so copying the list is genuinely enough —
- * had the elements been mutable, the list copy alone would have been a false comfort.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public final class BillSummary implements Serializable, Comparable<BillSummary> {
 
     private static final long serialVersionUID = 1L;
@@ -56,19 +27,6 @@ public final class BillSummary implements Serializable, Comparable<BillSummary> 
     /** Held as an unmodifiable list of immutable elements. */
     private final List<Bill.LineItem> lineItems;
 
-    /**
-     * @param billId          the bill's business key
-     * @param patientId       the billed patient's id
-     * @param patientName     the billed patient's name
-     * @param billType        e.g. {@code "Consultation Bill"}
-     * @param baseAmount      pre-policy charge
-     * @param surchargeAmount any surcharge applied
-     * @param taxAmount       tax component
-     * @param totalAmount     final payable total
-     * @param amountPaid      amount settled so far
-     * @param billingDate     when the bill was raised
-     * @param lineItems       the charged items; copied defensively
-     */
     public BillSummary(String billId, String patientId, String patientName, String billType,
                        double baseAmount, double surchargeAmount, double taxAmount,
                        double totalAmount, double amountPaid,
@@ -89,7 +47,6 @@ public final class BillSummary implements Serializable, Comparable<BillSummary> 
                 lineItems == null ? new ArrayList<>() : new ArrayList<>(lineItems));
     }
 
-    // ---------------------------------------------------------------- getters only
     public String getBillId() {
         return billId;
     }
@@ -130,12 +87,10 @@ public final class BillSummary implements Serializable, Comparable<BillSummary> 
         return billingDate;
     }
 
-    /** @return an unmodifiable view; mutation attempts throw {@link UnsupportedOperationException} */
     public List<Bill.LineItem> getLineItems() {
         return lineItems;
     }
 
-    // ------------------------------------------------------------------ derived
     public double getBalanceDue() {
         return Math.max(0.0, totalAmount - amountPaid);
     }
@@ -151,14 +106,6 @@ public final class BillSummary implements Serializable, Comparable<BillSummary> 
         return amountPaid > 0 ? "PARTIALLY_PAID" : "UNPAID";
     }
 
-    /**
-     * "Mutation" on an immutable type: returns a <em>new</em> summary with an extra
-     * payment recorded, leaving this one untouched — the same approach
-     * {@code String.trim()} and {@code LocalDate.plusDays()} take.
-     *
-     * @param additionalPayment the payment to record
-     * @return a new summary reflecting the payment
-     */
     public BillSummary withPayment(double additionalPayment) {
         return new BillSummary(billId, patientId, patientName, billType,
                 baseAmount, surchargeAmount, taxAmount, totalAmount,
@@ -166,7 +113,6 @@ public final class BillSummary implements Serializable, Comparable<BillSummary> 
                 billingDate, lineItems);
     }
 
-    // ----------------------------------------------------------------- identity
     @Override
     public boolean equals(Object o) {
         if (this == o) {

@@ -2,12 +2,6 @@ package com.airtribe.meditrack.exception;
 
 import java.time.LocalDateTime;
 
-/**
- * Thrown when a requested appointment slot cannot be booked — the doctor is already
- * occupied, the slot falls outside clinic hours, or the daily cap is reached.
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public class SlotUnavailableException extends Exception {
 
     private static final long serialVersionUID = 1L;

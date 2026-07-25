@@ -17,17 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Raises and settles bills.
- *
- * <p>The <b>context</b> in the Strategy pattern and the sole caller of
- * {@link BillFactory}. Notice how little this class does: it delegates <em>which</em>
- * bill to the factory, <em>how much</em> to the strategy, and the calculation order to
- * the Template Method inside {@link Bill}. What remains here is the use-case
- * orchestration — which is exactly the Single Responsibility Principle's promise.</p>
- *
- * @author Zubair (Services, Logic, Observer and AI) / Varun (Factory)
- */
 public class BillingService {
 
     private final DataStore<Bill> store;
@@ -40,15 +29,6 @@ public class BillingService {
         this.store = store;
     }
 
-    // -------------------------------------------------------------------- create
-    /**
-     * Raises a bill for a completed appointment.
-     *
-     * @param appointment the appointment to bill
-     * @param type        which kind of bill to raise
-     * @return the generated bill
-     * @throws InvalidDataException if the appointment is missing or not yet completed
-     */
     public Bill generateBillForAppointment(Appointment appointment, BillType type)
             throws InvalidDataException {
 
@@ -65,15 +45,6 @@ public class BillingService {
         return store.save(bill);
     }
 
-    /**
-     * Raises a standalone bill not tied to an appointment.
-     *
-     * @param patient the patient to bill
-     * @param type    which kind of bill
-     * @param baseFee the base charge
-     * @return the generated bill
-     * @throws InvalidDataException if the patient is missing
-     */
     public Bill generateBill(Patient patient, BillType type, double baseFee)
             throws InvalidDataException {
         if (patient == null) {
@@ -84,17 +55,6 @@ public class BillingService {
         return store.save(bill);
     }
 
-    /**
-     * Raises a bill with an explicitly chosen pricing policy, overriding the factory's
-     * automatic choice.
-     *
-     * @param patient  the patient to bill
-     * @param type     which kind of bill
-     * @param baseFee  the base charge
-     * @param strategy the policy to apply
-     * @return the generated bill
-     * @throws InvalidDataException if the patient is missing
-     */
     public Bill generateBillWithStrategy(Patient patient, BillType type,
                                          double baseFee, BillingStrategy strategy)
             throws InvalidDataException {
@@ -106,16 +66,6 @@ public class BillingService {
         return store.save(bill);
     }
 
-    // ------------------------------------------------------------------ payment
-    /**
-     * Records a payment against a bill.
-     *
-     * @param billId the bill to pay
-     * @param amount the amount tendered
-     * @return the updated bill
-     * @throws EntityNotFoundException if the bill id is unknown
-     * @throws InvalidDataException    if the amount is invalid or exceeds the balance
-     */
     public Bill recordPayment(String billId, double amount)
             throws EntityNotFoundException, InvalidDataException {
         Bill bill = store.getById(billId);
@@ -127,20 +77,11 @@ public class BillingService {
         return bill;
     }
 
-    /**
-     * Settles a bill in full.
-     *
-     * @param billId the bill to settle
-     * @return the paid bill
-     * @throws EntityNotFoundException if the bill id is unknown
-     * @throws InvalidDataException    if the bill is already fully paid
-     */
     public Bill settleInFull(String billId) throws EntityNotFoundException, InvalidDataException {
         Bill bill = store.getById(billId);
         return recordPayment(billId, bill.getAmountDue());
     }
 
-    // ---------------------------------------------------------------------- read
     public Optional<Bill> findById(String billId) {
         return store.findById(billId);
     }
@@ -153,10 +94,6 @@ public class BillingService {
         return store.count();
     }
 
-    /**
-     * @param patientId the patient
-     * @return that patient's bills
-     */
     public List<Bill> getBillsForPatient(String patientId) {
         return store.findBy(b -> b.getPatient() != null && b.getPatient().getId().equals(patientId));
     }
@@ -169,10 +106,6 @@ public class BillingService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * @param keyword the search term
-     * @return matching bills
-     */
     public List<Bill> searchBills(String keyword) {
         return store.search(keyword);
     }
@@ -185,7 +118,6 @@ public class BillingService {
                 .collect(Collectors.toList());
     }
 
-    // ------------------------------------------------------- streams & analytics
     /**
      * @return the sum of every bill's total
      */

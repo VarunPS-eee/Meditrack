@@ -1,14 +1,5 @@
 package com.airtribe.meditrack.exception;
 
-/**
- * Thrown when a generic {@code DataStore<T>} lookup finds no entity for an id.
- *
- * <p>Used by the storage layer, which does not know whether it is holding patients,
- * doctors or bills — so it reports the entity type as a string rather than throwing
- * a type-specific exception.</p>
- *
- * @author Sunil (Utils, Storage, Singleton, Docs and Testing)
- */
 public class EntityNotFoundException extends Exception {
 
     private static final long serialVersionUID = 1L;

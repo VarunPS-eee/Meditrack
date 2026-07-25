@@ -15,24 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Rule-based clinical triage: recommends a speciality from described symptoms, ranks
- * doctors, and suggests appointment slots.
- *
- * <h2>What "AI" means here</h2>
- * <p>This is a deterministic <b>expert system</b>, not a learned model — no training data,
- * no network calls, no dependencies. Scores come from keyword matches declared on
- * {@link Specialization}, so every recommendation can be explained by pointing at the
- * keywords that fired. For a clinical triage aid that transparency is a feature, not a
- * limitation.</p>
- *
- * <h2>Ranking</h2>
- * <p>Doctors are scored on a weighted blend of speciality match, rating, experience and
- * current load, so the system does not simply funnel every patient to one popular
- * consultant.</p>
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public final class AIHelper {
 
     /** Weight applied to how well the doctor's speciality matches the symptoms. */
@@ -56,13 +38,6 @@ public final class AIHelper {
         throw new AssertionError("AIHelper is a utility class and must not be instantiated.");
     }
 
-    /**
-     * A scored speciality recommendation.
-     *
-     * @param specialization the recommended speciality
-     * @param score          how many symptom keywords matched
-     * @param matchedKeywords the keywords responsible for the score
-     */
     public record SpecialityMatch(Specialization specialization, int score, List<String> matchedKeywords) {
 
         /** @return confidence as a percentage of the best achievable score */
@@ -71,23 +46,9 @@ public final class AIHelper {
         }
     }
 
-    /**
-     * A scored doctor recommendation.
-     *
-     * @param doctor the recommended doctor
-     * @param score  the weighted suitability score
-     * @param reason a human-readable justification
-     */
     public record DoctorRecommendation(Doctor doctor, double score, String reason) {
     }
 
-    // ------------------------------------------------------- speciality triage
-    /**
-     * Ranks every speciality against the described symptoms.
-     *
-     * @param symptomText free-text symptom description
-     * @return matching specialities, best first; empty if nothing matched
-     */
     public static List<SpecialityMatch> recommendSpecialities(String symptomText) {
         if (symptomText == null || symptomText.isBlank()) {
             return List.of();
@@ -106,16 +67,6 @@ public final class AIHelper {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * The single best speciality for the described symptoms.
-     *
-     * <p>Falls back to {@link Specialization#GENERAL_PRACTICE} when nothing matches —
-     * a triage system that refuses to answer is worse than one that routes to a
-     * generalist.</p>
-     *
-     * @param symptomText free-text symptom description
-     * @return the recommended speciality
-     */
     public static Specialization recommendSpecialization(String symptomText) {
         return recommendSpecialities(symptomText).stream()
                 .findFirst()
@@ -123,12 +74,6 @@ public final class AIHelper {
                 .orElse(Specialization.GENERAL_PRACTICE);
     }
 
-    /**
-     * Flags symptom descriptions that warrant emergency handling.
-     *
-     * @param symptomText free-text symptom description
-     * @return {@code true} if any urgency keyword is present
-     */
     public static boolean isUrgent(String symptomText) {
         if (symptomText == null || symptomText.isBlank()) {
             return false;
@@ -137,16 +82,6 @@ public final class AIHelper {
         return URGENT_KEYWORDS.stream().anyMatch(haystack::contains);
     }
 
-    // --------------------------------------------------------- doctor ranking
-    /**
-     * Recommends doctors for the described symptoms, best match first.
-     *
-     * @param symptomText  free-text symptom description
-     * @param doctors      the roster to choose from
-     * @param appointments existing appointments, used to spread load
-     * @param limit        how many recommendations to return
-     * @return the ranked recommendations
-     */
     public static List<DoctorRecommendation> recommendDoctors(String symptomText,
                                                               List<Doctor> doctors,
                                                               List<Appointment> appointments,
@@ -205,16 +140,6 @@ public final class AIHelper {
                 .collect(Collectors.groupingBy(a -> a.getDoctor().getId(), Collectors.counting()));
     }
 
-    // ----------------------------------------------------------- slot suggestion
-    /**
-     * Suggests the next free slots for a doctor, searching forward day by day.
-     *
-     * @param doctor         the doctor to book with
-     * @param appointments   existing appointments
-     * @param maxSuggestions how many slots to return
-     * @param daysToSearch   how many days ahead to look
-     * @return the suggested slots, soonest first
-     */
     public static List<LocalDateTime> suggestSlots(Doctor doctor,
                                                    List<Appointment> appointments,
                                                    int maxSuggestions,
@@ -245,14 +170,6 @@ public final class AIHelper {
         return suggestions;
     }
 
-    /**
-     * Suggests the earliest slot across every doctor able to treat the symptoms.
-     *
-     * @param symptomText  free-text symptom description
-     * @param doctors      the roster
-     * @param appointments existing appointments
-     * @return the doctor and slot to offer, if one exists
-     */
     public static Optional<Map.Entry<Doctor, LocalDateTime>> suggestEarliestAppointment(
             String symptomText, List<Doctor> doctors, List<Appointment> appointments) {
 
@@ -266,15 +183,6 @@ public final class AIHelper {
         return Optional.empty();
     }
 
-    // -------------------------------------------------------------- explanation
-    /**
-     * Builds a printable triage report explaining the recommendation.
-     *
-     * @param symptomText  the described symptoms
-     * @param doctors      the roster
-     * @param appointments existing appointments
-     * @return the report text
-     */
     public static String buildTriageReport(String symptomText,
                                            List<Doctor> doctors,
                                            List<Appointment> appointments) {
@@ -328,12 +236,6 @@ public final class AIHelper {
         return sb.toString();
     }
 
-    /**
-     * Suggests history notes worth capturing, based on the patient's recorded allergies.
-     *
-     * @param patient the patient
-     * @return prompts for the clinician, empty if nothing to flag
-     */
     public static List<String> suggestScreeningPrompts(Patient patient) {
         Map<String, String> prompts = new LinkedHashMap<>();
         if (patient == null) {

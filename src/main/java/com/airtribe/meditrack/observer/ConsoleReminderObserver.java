@@ -4,11 +4,6 @@ import com.airtribe.meditrack.entity.Appointment;
 import com.airtribe.meditrack.interfaces.AppointmentObserver;
 import com.airtribe.meditrack.util.DateUtil;
 
-/**
- * Prints an on-screen banner for every appointment event.
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public class ConsoleReminderObserver implements AppointmentObserver {
 
     @Override

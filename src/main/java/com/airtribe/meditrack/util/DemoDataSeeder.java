@@ -12,27 +12,12 @@ import com.airtribe.meditrack.service.PatientService;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Populates the application with a realistic demo dataset.
- *
- * <p>Exists so a reviewer running {@code --seedDemo} sees a working clinic immediately
- * rather than a set of empty menus. Also used by the walkthrough in the README.</p>
- *
- * @author Sunil (Utils, Storage, Singleton, Docs and Testing)
- */
 public final class DemoDataSeeder {
 
     private DemoDataSeeder() {
         throw new AssertionError("DemoDataSeeder is a utility class and must not be instantiated.");
     }
 
-    /**
-     * Seeds doctors, patients and a few appointments.
-     *
-     * @param patientService     patient store to populate
-     * @param doctorService      doctor store to populate
-     * @param appointmentService appointment store to populate
-     */
     public static void seed(PatientService patientService,
                             DoctorService doctorService,
                             AppointmentService appointmentService) {

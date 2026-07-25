@@ -3,15 +3,6 @@ package com.airtribe.meditrack.strategy;
 import com.airtribe.meditrack.constants.Constants;
 import com.airtribe.meditrack.interfaces.BillingStrategy;
 
-/**
- * Insurance-backed pricing: the provider covers a percentage, and the patient is billed
- * only the remaining co-pay.
- *
- * <p>The coverage rate is configurable per policy, so one class serves every insurer
- * rather than needing a subclass each.</p>
- *
- * @author Varun (Core Entities, OOP and Factory)
- */
 public class InsuranceBillingStrategy implements BillingStrategy {
 
     /** Fraction the insurer pays, {@code 0.0}–{@code 1.0}. */
@@ -24,10 +15,6 @@ public class InsuranceBillingStrategy implements BillingStrategy {
         this(Constants.INSURANCE_COVERAGE_RATE, "Default Insurer");
     }
 
-    /**
-     * @param coverageRate fraction of the bill the insurer covers
-     * @param providerName the insurer's name, shown on the bill
-     */
     public InsuranceBillingStrategy(double coverageRate, String providerName) {
         this.coverageRate = Math.clamp(coverageRate, 0.0, 1.0);
         this.providerName = providerName == null ? "Insurer" : providerName;

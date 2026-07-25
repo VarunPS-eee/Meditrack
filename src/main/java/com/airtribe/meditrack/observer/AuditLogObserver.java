@@ -9,19 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Records every appointment event to an in-memory audit trail.
- *
- * <p>This observer is the clearest argument for the pattern: auditing is a genuine
- * cross-cutting concern, and without Observer the appointment service would have to call
- * an audit method at the end of every mutating operation — forever, and correctly, at
- * every new call site. Here the service fires one event and the audit trail takes care
- * of itself.</p>
- *
- * <p>Unlike the notification channels, this one subscribes to everything.</p>
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public class AuditLogObserver implements AppointmentObserver {
 
     /** One immutable line of the audit trail. */

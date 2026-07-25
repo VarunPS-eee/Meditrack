@@ -6,18 +6,6 @@ import com.airtribe.meditrack.util.DateUtil;
 
 import java.util.Set;
 
-/**
- * Simulates an SMS reminder to the patient's registered number.
- *
- * <p>Demonstrates selective subscription: {@link #isInterestedIn(String)} filters out
- * events a patient would not want texted about, so the dispatcher does not need to know
- * which channel cares about what.</p>
- *
- * <p>No SMS gateway is contacted — the message is printed. Swapping the {@code println}
- * for a real gateway call is the only change needed, and no other class would move.</p>
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public class SmsReminderObserver implements AppointmentObserver {
 
     /** SMS is reserved for events the patient must act on. */

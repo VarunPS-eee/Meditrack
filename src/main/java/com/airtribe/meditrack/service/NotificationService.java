@@ -12,37 +12,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-/**
- * The <b>Subject</b> half of the Observer pattern, plus the background reminder sweep.
- *
- * <h2>Observer</h2>
- * <p>Observers register here and are notified of every appointment event. The service has
- * no idea whether an observer sends SMS, writes an audit line or does nothing — it holds
- * only {@link AppointmentObserver} references. Adding a channel means writing one class
- * and calling {@link #register(AppointmentObserver)}; no existing code changes.</p>
- *
- * <h2>Concurrency</h2>
- * <p>Three distinct mechanisms are used here, each for a specific reason:</p>
- *
- * <ul>
- *   <li>{@link CopyOnWriteArrayList} for the observer list. Registration happens rarely
- *       (at startup) while iteration happens on every event, including from the timer
- *       thread. Copy-on-write makes reads lock-free and removes any chance of a
- *       {@link java.util.ConcurrentModificationException} if an observer registers
- *       another observer mid-dispatch.</li>
- *   <li>{@link AtomicInteger} for the event counter — {@code count++} is a
- *       read-modify-write that loses updates when the main and timer threads race;
- *       {@code incrementAndGet()} cannot.</li>
- *   <li>A {@code synchronized} block around the reminder sweep, so a sweep already in
- *       flight is never overlapped by the next tick.</li>
- * </ul>
- *
- * <h2>TimerTask</h2>
- * <p>{@link Timer} runs {@link ReminderTask} on a <em>daemon</em> thread, so the JVM can
- * exit when the user quits the menu instead of hanging on a live scheduler.</p>
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public class NotificationService {
 
     /** Event names dispatched to observers. */
@@ -66,7 +35,6 @@ public class NotificationService {
     private Timer reminderTimer;
     private boolean enabled = true;
 
-    // ------------------------------------------------------------- registration
     /**
      * @param observer the channel to add; {@code null} and duplicates are ignored
      */
@@ -76,10 +44,6 @@ public class NotificationService {
         }
     }
 
-    /**
-     * @param observer the channel to remove
-     * @return {@code true} if it was registered
-     */
     public boolean unregister(AppointmentObserver observer) {
         return observers.remove(observer);
     }
@@ -104,17 +68,6 @@ public class NotificationService {
         this.enabled = enabled;
     }
 
-    // ---------------------------------------------------------------- dispatch
-    /**
-     * Fans an event out to every interested observer.
-     *
-     * <p>Each observer is invoked inside its own try/catch: a channel that throws must not
-     * prevent the remaining channels from being notified, and must certainly not fail the
-     * booking that triggered it.</p>
-     *
-     * @param appointment the appointment concerned
-     * @param eventType   one of the {@code EVENT_*} constants
-     */
     public void notifyObservers(Appointment appointment, String eventType) {
         if (!enabled || appointment == null) {
             return;
@@ -134,11 +87,6 @@ public class NotificationService {
         }
     }
 
-    // ---------------------------------------------------------------- reminders
-    /**
-     * The scheduled sweep. Extends {@link TimerTask}, which is simply a {@link Runnable}
-     * the {@link Timer} knows how to schedule.
-     */
     private class ReminderTask extends TimerTask {
 
         private final Supplier<List<Appointment>> appointmentSupplier;
@@ -161,12 +109,6 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Sends a reminder for every upcoming appointment inside the reminder window.
-     *
-     * @param appointments the appointments to consider
-     * @return how many reminders were sent
-     */
     public int sweepOnce(List<Appointment> appointments) {
         if (appointments == null || !enabled) {
             return 0;
@@ -186,12 +128,6 @@ public class NotificationService {
         return sent;
     }
 
-    /**
-     * Starts the periodic reminder sweep on a daemon thread.
-     *
-     * @param appointmentSupplier supplies the current appointment list at each tick
-     * @param periodSeconds       how often to sweep
-     */
     public void startReminderScheduler(Supplier<List<Appointment>> appointmentSupplier, long periodSeconds) {
         if (reminderTimer != null) {
             return;   // already running

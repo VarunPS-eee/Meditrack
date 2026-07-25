@@ -22,19 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Booking, cancelling, rescheduling and reporting on appointments.
- *
- * <p>This is the busiest service, and the one that ties the others together: it validates
- * through {@link Validator}, enforces clinic rules itself, stores through
- * {@link DataStore} and announces every change through {@link NotificationService}.</p>
- *
- * <p><b>Why the notification service is injected.</b> The booking logic does not know or
- * care that SMS and audit observers exist. Were it to call them directly, adding a channel
- * would mean editing this class — the exact coupling the Observer pattern removes.</p>
- *
- * @author Zubair (Services, Logic, Observer and AI)
- */
 public class AppointmentService {
 
     private final DataStore<Appointment> store;
@@ -45,28 +32,12 @@ public class AppointmentService {
         this(new DataStore<>("Appointment"), new NotificationService());
     }
 
-    /**
-     * @param store               the backing store
-     * @param notificationService the event dispatcher
-     */
     public AppointmentService(DataStore<Appointment> store, NotificationService notificationService) {
         this.store = store;
         this.notificationService = notificationService;
         this.idGenerator = IdGenerator.getInstance();
     }
 
-    // --------------------------------------------------------------------- book
-    /**
-     * Books an appointment after checking every clinic rule.
-     *
-     * @param patient  the patient attending
-     * @param doctor   the doctor consulting
-     * @param slot     the requested date and time
-     * @param symptoms reported symptoms, may be empty
-     * @return the booked appointment
-     * @throws InvalidDataException     if the patient, doctor or slot is invalid
-     * @throws SlotUnavailableException if the doctor cannot take the slot
-     */
     public Appointment bookAppointment(Patient patient, Doctor doctor, LocalDateTime slot,
                                        List<String> symptoms)
             throws InvalidDataException, SlotUnavailableException {
@@ -112,15 +83,6 @@ public class AppointmentService {
         return store.save(appointment);
     }
 
-    // ------------------------------------------------------------------ lifecycle
-    /**
-     * Confirms a pending appointment.
-     *
-     * @param appointmentId the appointment to confirm
-     * @return the confirmed appointment
-     * @throws AppointmentNotFoundException if the id is unknown
-     * @throws InvalidDataException         if the current status forbids confirming
-     */
     public Appointment confirmAppointment(String appointmentId)
             throws AppointmentNotFoundException, InvalidDataException {
         Appointment appointment = requireAppointment(appointmentId);
@@ -131,14 +93,6 @@ public class AppointmentService {
         return appointment;
     }
 
-    /**
-     * Cancels an appointment and notifies every channel.
-     *
-     * @param appointmentId the appointment to cancel
-     * @return the cancelled appointment
-     * @throws AppointmentNotFoundException if the id is unknown
-     * @throws InvalidDataException         if the appointment is already in a terminal state
-     */
     public Appointment cancelAppointment(String appointmentId)
             throws AppointmentNotFoundException, InvalidDataException {
         Appointment appointment = requireAppointment(appointmentId);
@@ -150,14 +104,6 @@ public class AppointmentService {
         return appointment;
     }
 
-    /**
-     * Marks an appointment complete, making it billable.
-     *
-     * @param appointmentId the appointment to complete
-     * @return the completed appointment
-     * @throws AppointmentNotFoundException if the id is unknown
-     * @throws InvalidDataException         if the current status forbids completing
-     */
     public Appointment completeAppointment(String appointmentId)
             throws AppointmentNotFoundException, InvalidDataException {
         Appointment appointment = requireAppointment(appointmentId);
@@ -170,16 +116,6 @@ public class AppointmentService {
         return appointment;
     }
 
-    /**
-     * Moves an appointment to a new slot, re-running availability checks.
-     *
-     * @param appointmentId the appointment to move
-     * @param newSlot       the new date and time
-     * @return the rescheduled appointment
-     * @throws AppointmentNotFoundException if the id is unknown
-     * @throws InvalidDataException         if the new slot is invalid
-     * @throws SlotUnavailableException     if the doctor cannot take the new slot
-     */
     public Appointment rescheduleAppointment(String appointmentId, LocalDateTime newSlot)
             throws AppointmentNotFoundException, InvalidDataException, SlotUnavailableException {
 
@@ -200,12 +136,6 @@ public class AppointmentService {
         return appointment;
     }
 
-    // ---------------------------------------------------------------------- read
-    /**
-     * @param appointmentId the id to look up
-     * @return the appointment
-     * @throws AppointmentNotFoundException if the id is unknown
-     */
     public Appointment requireAppointment(String appointmentId) throws AppointmentNotFoundException {
         return store.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentNotFoundException(appointmentId));
@@ -223,10 +153,6 @@ public class AppointmentService {
         return store.count();
     }
 
-    /**
-     * @param patientId the patient
-     * @return that patient's appointments, soonest first
-     */
     public List<Appointment> getAppointmentsForPatient(String patientId) {
         return store.stream()
                 .filter(a -> a.getPatient() != null && a.getPatient().getId().equals(patientId))
@@ -234,10 +160,6 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * @param doctorId the doctor
-     * @return that doctor's appointments, soonest first
-     */
     public List<Appointment> getAppointmentsForDoctor(String doctorId) {
         return store.stream()
                 .filter(a -> a.getDoctor() != null && a.getDoctor().getId().equals(doctorId))
@@ -245,10 +167,6 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * @param status the status to filter on
-     * @return matching appointments
-     */
     public List<Appointment> getByStatus(AppointmentStatus status) {
         return store.findBy(a -> a.getStatus() == status);
     }
@@ -261,20 +179,10 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * @param keyword the search term
-     * @return appointments matching on patient, doctor, status, symptoms or notes
-     */
     public List<Appointment> searchAppointments(String keyword) {
         return store.search(keyword);
     }
 
-    // ------------------------------------------------------------ availability
-    /**
-     * @param doctorId the doctor
-     * @param slot     the slot to test
-     * @return {@code true} if the doctor already has a live appointment at that time
-     */
     public boolean isDoctorBooked(String doctorId, LocalDateTime slot) {
         return isDoctorBookedExcluding(doctorId, slot, null);
     }
@@ -288,11 +196,6 @@ public class AppointmentService {
                 .anyMatch(a -> aligned.equals(DateUtil.alignToSlot(a.getSlot())));
     }
 
-    /**
-     * @param doctorId the doctor
-     * @param date     the day
-     * @return how many live appointments that doctor has on that day
-     */
     public long countForDoctorOnDate(String doctorId, LocalDate date) {
         return store.stream()
                 .filter(a -> !a.getStatus().isTerminal())
@@ -301,13 +204,6 @@ public class AppointmentService {
                 .count();
     }
 
-    /**
-     * Every slot a doctor still has open on a given day.
-     *
-     * @param doctorId the doctor
-     * @param date     the day
-     * @return the free slots, in order
-     */
     public List<LocalDateTime> getAvailableSlots(String doctorId, LocalDate date) {
         List<LocalDateTime> booked = store.stream()
                 .filter(a -> !a.getStatus().isTerminal())
@@ -321,7 +217,6 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    // ------------------------------------------------------- streams & analytics
     /**
      * @return doctor name to appointment count, busiest reporting first
      */
@@ -375,19 +270,10 @@ public class AppointmentService {
                 .sum();
     }
 
-    // ------------------------------------------------------------- persistence
     public void saveToFile() throws DataPersistenceException {
         CSVUtil.writeAppointments(Constants.APPOINTMENTS_FILE, store.findAll());
     }
 
-    /**
-     * Loads appointments and re-links them to the supplied patients and doctors.
-     *
-     * @param patients patients by id
-     * @param doctors  doctors by id
-     * @return how many appointments were loaded
-     * @throws DataPersistenceException if the CSV cannot be read
-     */
     public int loadFromFile(Map<String, Patient> patients, Map<String, Doctor> doctors)
             throws DataPersistenceException {
         List<Appointment> loaded =
