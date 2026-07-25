@@ -7,6 +7,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -200,27 +202,44 @@ public final class DateUtil {
 
     // --------------------------------------------------------------- durations
     /**
-     * @param from earlier timestamp
-     * @param to   later timestamp
-     * @return whole hours between the two, or {@code 0} if either is {@code null}
+     * Anchors a wall-clock timestamp to the clinic's zone.
+     *
+     * <p>A {@link LocalDateTime} carries no offset, so subtracting two of them
+     * counts <i>calendar</i> hours rather than elapsed ones. Across a
+     * daylight-saving transition those differ: 01:00 to 04:00 on a spring-forward
+     * morning is three calendar hours but only two real ones. Reminders and
+     * "time until your appointment" messages need elapsed time, so both operands
+     * are resolved through the system zone before any arithmetic.
+     *
+     * @param value wall-clock timestamp
+     * @return the same instant anchored to {@link ZoneId#systemDefault()}
      */
-    public static long hoursBetween(LocalDateTime from, LocalDateTime to) {
-        if (from == null || to == null) {
-            return 0;
-        }
-        return ChronoUnit.HOURS.between(from, to);
+    private static ZonedDateTime atClinicZone(LocalDateTime value) {
+        return value.atZone(ZoneId.systemDefault());
     }
 
     /**
      * @param from earlier timestamp
      * @param to   later timestamp
-     * @return whole days between the two, or {@code 0} if either is {@code null}
+     * @return whole elapsed hours between the two, or {@code 0} if either is {@code null}
+     */
+    public static long hoursBetween(LocalDateTime from, LocalDateTime to) {
+        if (from == null || to == null) {
+            return 0;
+        }
+        return ChronoUnit.HOURS.between(atClinicZone(from), atClinicZone(to));
+    }
+
+    /**
+     * @param from earlier timestamp
+     * @param to   later timestamp
+     * @return whole elapsed days between the two, or {@code 0} if either is {@code null}
      */
     public static long daysBetween(LocalDateTime from, LocalDateTime to) {
         if (from == null || to == null) {
             return 0;
         }
-        return ChronoUnit.DAYS.between(from, to);
+        return ChronoUnit.DAYS.between(atClinicZone(from), atClinicZone(to));
     }
 
     /**
@@ -233,7 +252,7 @@ public final class DateUtil {
         if (slot == null) {
             return "unknown";
         }
-        Duration gap = Duration.between(LocalDateTime.now(), slot);
+        Duration gap = Duration.between(ZonedDateTime.now(ZoneId.systemDefault()), atClinicZone(slot));
         if (gap.isNegative()) {
             return "in the past";
         }

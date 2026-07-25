@@ -42,3 +42,12 @@ data/
 
 ### Generated documentation ###
 docs/javadoc/
+
+### Local-only working files ###
+# Personal notes, planning scratch and analysis output. Never committed.
+.local/
+
+### Analysis and coverage output ###
+.scannerwork/
+coverage/
+*.exec

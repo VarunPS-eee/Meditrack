@@ -71,26 +71,26 @@ public class TestRunner {
     public static void main(String[] args) {
         printHeader();
 
-        runValidatorTests();
-        runDateUtilTests();
-        runEntityTests();
-        runCopySemanticsTests();
-        runImmutabilityTests();
-        runEnumTests();
-        runSingletonTests();
-        runDataStoreTests();
-        runGenericsAndIteratorTests();
-        runPatientServiceTests();
-        runDoctorServiceTests();
-        runAppointmentServiceTests();
-        runBillingAndFactoryTests();
-        runStrategyTests();
-        runObserverTests();
-        runAIHelperTests();
-        runExceptionTests();
-        runCSVTests();
-        runConcurrencyTests();
-        runStreamsTests();
+        guard("Validator", TestRunner::runValidatorTests);
+        guard("DateUtil", TestRunner::runDateUtilTests);
+        guard("Entities", TestRunner::runEntityTests);
+        guard("Copy semantics", TestRunner::runCopySemanticsTests);
+        guard("Immutability", TestRunner::runImmutabilityTests);
+        guard("Enums", TestRunner::runEnumTests);
+        guard("Singletons", TestRunner::runSingletonTests);
+        guard("DataStore", TestRunner::runDataStoreTests);
+        guard("Generics and iterator", TestRunner::runGenericsAndIteratorTests);
+        guard("PatientService", TestRunner::runPatientServiceTests);
+        guard("DoctorService", TestRunner::runDoctorServiceTests);
+        guard("AppointmentService", TestRunner::runAppointmentServiceTests);
+        guard("Billing and factory", TestRunner::runBillingAndFactoryTests);
+        guard("Strategies", TestRunner::runStrategyTests);
+        guard("Observers", TestRunner::runObserverTests);
+        guard("AI helper", TestRunner::runAIHelperTests);
+        guard("Exceptions", TestRunner::runExceptionTests);
+        guard("CSV", TestRunner::runCSVTests);
+        guard("Concurrency", TestRunner::runConcurrencyTests);
+        guard("Streams", TestRunner::runStreamsTests);
 
         printSummary();
         if (failed > 0) {
@@ -215,9 +215,22 @@ public class TestRunner {
         Patient same = new Patient("PAT-9001", "Different Name", 20, "9999999999", "none");
         assertTrue("equal ids mean equal entities", patient.equals(same));
         assertEquals("equal objects hash alike", patient.hashCode(), same.hashCode());
-        assertFalse("different types are never equal", patient.equals(doctor));
-        assertFalse("null is never equal", patient.equals(null));
-        assertTrue("reflexive", patient.equals(patient));
+        // The next three assertions bind through Object-typed references on
+        // purpose. Written directly -- patient.equals(doctor), .equals(null),
+        // .equals(patient) -- the compiler and static analysis can prove each
+        // result without running anything, and flag them as defects. But proving
+        // equals() returns false for an unrelated type IS the contract; the test
+        // has to make the call at run time to be worth anything. Going through
+        // Object keeps the runtime check honest while stating the intent: we are
+        // exercising the equals contract, not comparing two things we expect to
+        // match.
+        Object unrelatedType = doctor;
+        Object nullReference = null;
+        Object sameInstance = patient;
+
+        assertFalse("different types are never equal", patient.equals(unrelatedType));
+        assertFalse("null is never equal", patient.equals(nullReference));
+        assertTrue("reflexive", patient.equals(sameInstance));
 
         // Searchable default methods
         assertTrue("matches on name", patient.matches("Test"));
@@ -575,9 +588,9 @@ public class TestRunner {
         LocalDateTime slot = DateUtil.alignToSlot(
                 LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
 
-        Appointment appointment = tryGet(() -> service.bookAppointment(patient, doctor, slot,
-                List.of("fever", "cough")));
-        assertNotNull("appointment booked", appointment);
+        Appointment appointment = assertPresent("appointment booked",
+                tryGet(() -> service.bookAppointment(patient, doctor, slot,
+                        List.of("fever", "cough"))));
         assertEquals("new appointment starts PENDING",
                 AppointmentStatus.PENDING, appointment.getStatus());
         assertEquals("symptoms recorded", 2, appointment.getSymptoms().size());
@@ -675,8 +688,8 @@ public class TestRunner {
 
         // Payable contract
         BillingService billing = new BillingService();
-        Bill bill = tryGet(() -> billing.generateBill(standard, BillType.CONSULTATION, 1000));
-        assertNotNull("bill raised through the service", bill);
+        Bill bill = assertPresent("bill raised through the service",
+                tryGet(() -> billing.generateBill(standard, BillType.CONSULTATION, 1000)));
         assertEquals("nothing paid yet", "UNPAID", bill.getPaymentStatus());
         assertFalse("not fully paid", bill.isFullyPaid());
 
@@ -727,13 +740,13 @@ public class TestRunner {
         // Same bill, different policy, different total — the point of Strategy.
         Patient patient = new Patient("PAT-5001", "Strategy Test", 30, "9876543210", "seen");
         BillingService service = new BillingService();
-        Bill standardBill = tryGet(() -> service.generateBillWithStrategy(
-                patient, BillType.CONSULTATION, base, new StandardBillingStrategy()));
-        Bill insuredBill = tryGet(() -> service.generateBillWithStrategy(
-                patient, BillType.CONSULTATION, base, new InsuranceBillingStrategy()));
+        Bill standardBill = assertPresent("standard bill raised",
+                tryGet(() -> service.generateBillWithStrategy(
+                        patient, BillType.CONSULTATION, base, new StandardBillingStrategy())));
+        Bill insuredBill = assertPresent("insured bill raised",
+                tryGet(() -> service.generateBillWithStrategy(
+                        patient, BillType.CONSULTATION, base, new InsuranceBillingStrategy())));
 
-        assertNotNull("standard bill raised", standardBill);
-        assertNotNull("insured bill raised", insuredBill);
         assertTrue("insurance produces a smaller total",
                 insuredBill.getTotalAmount() < standardBill.getTotalAmount());
     }
@@ -963,34 +976,37 @@ public class TestRunner {
         final int idsPerThread = 100;
         java.util.Set<String> ids = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
 
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
-        CountDownLatch latch = new CountDownLatch(threads);
+        // try-with-resources: ExecutorService is AutoCloseable as of Java 19, and
+        // close() shuts the pool down and waits for termination. The old
+        // shutdown()-in-finally leaked the pool's threads if await() threw before
+        // reaching it.
+        try (ExecutorService pool = Executors.newFixedThreadPool(threads)) {
+            CountDownLatch latch = new CountDownLatch(threads);
 
-        for (int i = 0; i < threads; i++) {
-            pool.submit(() -> {
-                try {
-                    for (int j = 0; j < idsPerThread; j++) {
-                        ids.add(generator.nextPatientId());
+            for (int i = 0; i < threads; i++) {
+                pool.submit(() -> {
+                    try {
+                        for (int j = 0; j < idsPerThread; j++) {
+                            ids.add(generator.nextPatientId());
+                        }
+                    } finally {
+                        latch.countDown();
                     }
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
+                });
+            }
 
-        try {
             boolean finished = latch.await(10, TimeUnit.SECONDS);
             assertTrue("all threads finished", finished);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             fail("interrupted while awaiting threads");
-        } finally {
-            pool.shutdown();
         }
 
         // The decisive assertion: with a plain int++ this would be short.
+        // The cast forces double multiplication; int*int silently truncates before
+        // widening, which would hide an overflow if the counts were ever raised.
         assertEquals("AtomicInteger issued " + (threads * idsPerThread) + " unique ids with no collisions",
-                threads * idsPerThread, ids.size());
+                (double) threads * idsPerThread, ids.size());
 
         generator.resetAll();
 
@@ -1090,6 +1106,50 @@ public class TestRunner {
 
     private static void assertFalse(String description, boolean condition) {
         record(description, !condition, "expected false but was true");
+    }
+
+    /**
+     * Runs one suite, turning anything that escapes it into a recorded failure.
+     *
+     * <p>Suites used to be called directly, so an unexpected throw propagated out
+     * of {@code main} and abandoned every suite after it — one stray
+     * {@code NullPointerException} could hide dozens of genuine results. Catching
+     * {@link Throwable} is deliberate rather than lazy: {@link #assertPresent}
+     * signals with {@link AssertionError}, which is an {@code Error}, not an
+     * {@code Exception}.
+     *
+     * @param name suite label, used if the suite aborts before naming itself
+     * @param body the suite to run
+     */
+    private static void guard(String name, Runnable body) {
+        try {
+            body.run();
+        } catch (Throwable t) {
+            currentSuite = name;
+            record(name + " suite aborted", false,
+                    "threw " + t.getClass().getSimpleName() + ": " + t.getMessage());
+        }
+    }
+
+    /**
+     * Asserts non-null and hands the value back, so the caller can keep using it.
+     *
+     * <p>{@link #assertNotNull} records the failure but lets execution continue,
+     * so the very next dereference throws {@code NullPointerException} and the
+     * run dies pointing at the symptom instead of the cause. Throwing here stops
+     * at the real failure, and {@link #guard} turns it into one clean result.
+     *
+     * @param description what was expected to be present
+     * @param value       the possibly-null value
+     * @param <T>         value type
+     * @return {@code value}, guaranteed non-null
+     */
+    private static <T> T assertPresent(String description, T value) {
+        assertNotNull(description, value);
+        if (value == null) {
+            throw new AssertionError(description + " — returned null");
+        }
+        return value;
     }
 
     private static void assertNotNull(String description, Object value) {

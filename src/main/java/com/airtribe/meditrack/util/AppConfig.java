@@ -38,6 +38,17 @@ public final class AppConfig {
 
     private final Map<String, String> settings;
     private final LocalDateTime startedAt;
+
+    /**
+     * Monotonic baseline for uptime.
+     *
+     * <p>{@link #startedAt} is a wall-clock value and is only for display. Wall
+     * clocks jump — NTP corrections, daylight-saving transitions and manual
+     * changes all move them, backwards as well as forwards — so subtracting two
+     * of them measures the clock, not elapsed time. {@link System#nanoTime()} is
+     * monotonic and immune to all three, which is what uptime actually needs.
+     */
+    private final long startedAtNanos;
     private boolean persistenceEnabled;
     private boolean remindersEnabled;
     private boolean verboseMode;
@@ -45,6 +56,7 @@ public final class AppConfig {
     /** Private — no caller can construct a second instance. */
     private AppConfig() {
         this.startedAt = LocalDateTime.now();
+        this.startedAtNanos = System.nanoTime();
         this.settings = new LinkedHashMap<>();
         this.persistenceEnabled = true;
         this.remindersEnabled = true;
@@ -128,9 +140,14 @@ public final class AppConfig {
         return startedAt;
     }
 
-    /** @return how long this JVM has been running, in seconds */
+    /**
+     * @return how long this JVM has been running, in seconds — measured from a
+     *         monotonic clock, so it stays correct across a DST change or an
+     *         NTP correction that would otherwise make uptime jump or go
+     *         negative
+     */
     public long getUptimeSeconds() {
-        return java.time.Duration.between(startedAt, LocalDateTime.now()).getSeconds();
+        return java.time.Duration.ofNanos(System.nanoTime() - startedAtNanos).getSeconds();
     }
 
     /**
