@@ -1,23 +1,187 @@
-package main.java.com.airtribe.meditrack.entity;
+package com.airtribe.meditrack.entity;
 
+import com.airtribe.meditrack.interfaces.Payable;
+
+import java.util.Comparator;
+
+/**
+ * A practising clinician.
+ *
+ * <p>Demonstrates <b>method overriding</b> ({@link #displayDetails()},
+ * {@link #getSearchableText()}) and supplies reusable {@link Comparator} constants so
+ * callers can sort doctors without every call site rewriting the comparison.</p>
+ *
+ * @author Varun (Core Entities, OOP and Factory)
+ */
 public class Doctor extends Person {
-    private Specialization specialization; // Using the Enum we just created
-    private double consultationFee;
 
-    public Doctor(String id, String name, int age, String contactNumber, Specialization specialization, double consultationFee) {
-        super(id, name, age, contactNumber); // Passes data to the Person superclass
-        this.specialization = specialization;
-        this.consultationFee = consultationFee;
+    private static final long serialVersionUID = 1L;
+
+    // ------------------------------------------------------------- comparators
+    /** Cheapest first. */
+    public static final Comparator<Doctor> BY_FEE =
+            Comparator.comparingDouble(Doctor::getConsultationFee);
+
+    /** Alphabetical, case-insensitive. */
+    public static final Comparator<Doctor> BY_NAME =
+            Comparator.comparing(Doctor::getName, String.CASE_INSENSITIVE_ORDER);
+
+    /** Most experienced first. */
+    public static final Comparator<Doctor> BY_EXPERIENCE =
+            Comparator.comparingInt(Doctor::getYearsOfExperience).reversed();
+
+    /** Highest rated first, ties broken by experience then name — a stable total order. */
+    public static final Comparator<Doctor> BY_RATING =
+            Comparator.comparingDouble(Doctor::getRating).reversed()
+                    .thenComparing(BY_EXPERIENCE)
+                    .thenComparing(BY_NAME);
+
+    // ------------------------------------------------------------------- state
+    private Specialization specialization;
+    private double consultationFee;
+    private int yearsOfExperience;
+    private double rating;
+    private boolean available;
+
+    /**
+     * Convenience constructor — defaults the fee to the speciality's base rate.
+     *
+     * @param id             business key
+     * @param name           full name
+     * @param age            age in years
+     * @param contactNumber  contact number
+     * @param specialization the doctor's speciality
+     */
+    public Doctor(String id, String name, int age, String contactNumber, Specialization specialization) {
+        this(id, name, age, contactNumber, specialization,
+                specialization == null ? 0.0 : specialization.getBaseConsultationFee(), 0, 0.0);
     }
 
-    public Specialization getSpecialization() { return specialization; }
-    public void setSpecialization(Specialization specialization) { this.specialization = specialization; }
+    /** Constructor matching the original 6-arg signature, kept for source compatibility. */
+    public Doctor(String id, String name, int age, String contactNumber,
+                  Specialization specialization, double consultationFee) {
+        this(id, name, age, contactNumber, specialization, consultationFee, 0, 0.0);
+    }
 
-    public double getConsultationFee() { return consultationFee; }
-    public void setConsultationFee(double consultationFee) { this.consultationFee = consultationFee; }
+    /**
+     * Canonical constructor.
+     *
+     * @param id                business key
+     * @param name              full name
+     * @param age               age in years
+     * @param contactNumber     contact number
+     * @param specialization    the doctor's speciality
+     * @param consultationFee   fee per consultation
+     * @param yearsOfExperience years in practice
+     * @param rating            patient rating, 0.0–5.0
+     */
+    public Doctor(String id, String name, int age, String contactNumber,
+                  Specialization specialization, double consultationFee,
+                  int yearsOfExperience, double rating) {
+        super(id, name, age, contactNumber);
+        this.specialization = specialization;
+        this.consultationFee = consultationFee;
+        this.yearsOfExperience = yearsOfExperience;
+        this.rating = rating;
+        this.available = true;
+    }
+
+    // --------------------------------------------------------------- accessors
+    public Specialization getSpecialization() {
+        return specialization;
+    }
+
+    public void setSpecialization(Specialization specialization) {
+        this.specialization = specialization;
+        touch();
+    }
+
+    public double getConsultationFee() {
+        return consultationFee;
+    }
+
+    public void setConsultationFee(double consultationFee) {
+        this.consultationFee = consultationFee;
+        touch();
+    }
+
+    public int getYearsOfExperience() {
+        return yearsOfExperience;
+    }
+
+    public void setYearsOfExperience(int yearsOfExperience) {
+        this.yearsOfExperience = yearsOfExperience;
+        touch();
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+        touch();
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+        touch();
+    }
+
+    // --------------------------------------------------------------- behaviour
+    /**
+     * Seniority band derived from years in practice — used by the AI helper when
+     * ranking equally-matched doctors.
+     *
+     * @return {@code JUNIOR}, {@code MID}, {@code SENIOR} or {@code CONSULTANT}
+     */
+    public String getSeniorityBand() {
+        if (yearsOfExperience < 3) {
+            return "JUNIOR";
+        } else if (yearsOfExperience < 8) {
+            return "MID";
+        } else if (yearsOfExperience < 15) {
+            return "SENIOR";
+        }
+        return "CONSULTANT";
+    }
 
     @Override
+    public String getEntityType() {
+        return "Doctor";
+    }
+
+    /** Overridden to make the speciality searchable alongside the inherited fields. */
+    @Override
+    public String getSearchableText() {
+        return super.getSearchableText() + " "
+                + (specialization == null ? "" : specialization.name() + " " + specialization.getDisplayName())
+                + " " + getSeniorityBand();
+    }
+
+    /**
+     * <b>Overriding + dynamic dispatch.</b> Called through a {@code MedicalEntity}
+     * reference, this version runs — not {@link Patient}'s.
+     */
+    @Override
     public void displayDetails() {
-        System.out.println("Doctor ID: " + getId() + ", Name: Dr. " + getName() + ", Spec: " + specialization);
+        StringBuilder sb = new StringBuilder(160);
+        sb.append("  [").append(getId()).append("] Dr. ").append(getName())
+                .append("  |  ").append(specialization == null ? "Unassigned" : specialization.getDisplayName())
+                .append("  |  Fee: ").append(Payable.formatCurrency(consultationFee))
+                .append("  |  Exp: ").append(yearsOfExperience).append("y (").append(getSeniorityBand()).append(')')
+                .append("  |  Rating: ").append(String.format("%.1f", rating)).append("/5.0")
+                .append("  |  ").append(available ? "AVAILABLE" : "UNAVAILABLE");
+        System.out.println(sb);
+    }
+
+    @Override
+    public String toString() {
+        return "Doctor{id='" + getId() + "', name='" + getName()
+                + "', specialization=" + specialization + ", fee=" + consultationFee + '}';
     }
 }
