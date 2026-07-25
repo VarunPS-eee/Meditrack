@@ -15,12 +15,19 @@ Real measurements, honestly reported, including what is **not** covered.
 | **Bugs** | **0** | 🟢 **A** |
 | **Vulnerabilities** | **0** | 🟢 **A** |
 | **Security hotspots** | **0** | 🟢 **A** |
-| **Maintainability** | 276 code smells | 🟢 **A** |
+| **Maintainability** | 344 code smells | 🟢 **A** |
 | **Duplicated lines** | **0.0%** | 🟢 |
-| Lines of code | 5,409 | — |
+| Lines of code | 5,936 | — |
 | Tests | 325 / 325 passing | 🟢 |
-| Coverage (Sonar, line) | 44.4% | 🟠 |
-| Coverage (JaCoCo, instruction) | 58.1% | 🟠 |
+| Coverage (Sonar, line) | 41.3% | 🟠 |
+| Coverage (JaCoCo, instruction) | 50.6% | 🟠 |
+
+> **Coverage fell from 58.1% to 50.6% in the last change, and that is not a
+> regression in testing** — no assertion was removed. The expanded demo seeder
+> and the two profile screens added roughly 600 lines the suite does not reach.
+> Coverage is a ratio, and the denominator grew. Recorded here rather than
+> quietly rebaselined, because a metric that only ever moves the flattering way
+> is not a metric.
 
 **Reliability went from E to A in this pass** — all 13 bugs were found and fixed.
 Coverage is the honest weak spot and is discussed in full below.
@@ -82,25 +89,26 @@ cascading into an unrelated NPE.
 
 ---
 
-## The 276 code smells in context
+## The 344 code smells in context
 
 The headline number is misleading, and it is worth being precise about why.
 
 | Rule | Count | Assessment |
 |---|---:|---|
-| **S106** — *"Replace System.out by a logger"* | **188** | **Not applicable.** MediTrack is a console application; printing to stdout is its user interface, and it has a hard zero-dependency rule so there is no logging framework to adopt. 68% of all smells are this one rule |
-| **S1192** — duplicated string literals | 26 | **Worth fixing.** Genuine; mostly repeated format strings in menu code |
-| **S8688** — specify a zone in `.now()` | 23 | **Partly worth fixing.** Correct in principle; most instances are in test setup where the system zone is intended |
-| **S6204** — use `.toList()` | 17 | **Worth fixing.** Trivially mechanical Java 16+ modernisation |
-| **S8694** | 6 | Minor |
+| **S106** — *"Replace System.out by a logger"* | **~240** | **Not applicable.** MediTrack is a console application; printing to stdout is its user interface, and it has a hard zero-dependency rule so there is no logging framework to adopt. Roughly 70% of all smells are this one rule |
+| **S1192** — duplicated string literals | ~30 | **Worth fixing.** Genuine; mostly repeated format strings in menu code |
+| **S8688** — specify a zone in `.now()` | ~23 | **Partly worth fixing.** Correct in principle; most instances are in test setup where the system zone is intended |
+| **S6204** — use `.toList()` | ~17 | **Worth fixing.** Trivially mechanical Java 16+ modernisation |
 | **S1181** — catch `Exception` not `Throwable` | 4 | **Deliberate.** `guard` and `tryGet` must catch `AssertionError`, which is an `Error`. Catching `Exception` would break them |
 | **S107** — too many parameters | 3 | Entity constructors. Arguable |
-| Others | 9 | Minor |
+| Others | ~27 | Minor |
 
-Strip the 188 inapplicable `S106` hits and the 4 deliberate `S1181` ones, and
-**84 actionable smells** remain across 5,409 lines. Sonar already rates
-maintainability **A**, with technical debt at ~45 hours against a codebase this
-size.
+Strip the inapplicable `S106` hits and the deliberate `S1181` ones and roughly
+**100 actionable smells** remain across 5,936 lines. Sonar still rates
+maintainability **A**.
+
+The count grew with the expanded demo seeder and the profile screens — both are
+console-printing code, so almost all of the increase is `S106`.
 
 These are **not** fixed yet. They are real, small, and worth a follow-up pass.
 
@@ -109,13 +117,18 @@ These are **not** fixed yet. They are real, small, and worth a follow-up pass.
 ## Coverage — the honest picture
 
 ```
-Overall        instruction  58.1%   (8,850 / 15,237)
-               branch       39.0%   (416 / 1,066)
+Overall        instruction  50.6%   (9,154 / 18,096)
+               branch       35.0%
 
 Excluding Main, DemoDataSeeder and TestRunner
-               instruction  61.7%   (5,376 / 8,716)
-               branch       46.6%   (365 / 783)
+               instruction  62.7%   (5,680 / 9,065)
+               branch       46.6%
 ```
+
+Note the gap between the two figures. **Excluding the three untestable classes,
+coverage actually rose slightly** (61.7% → 62.7%) while the overall number fell —
+the whole of the drop is the new console and fixture code entering the
+denominator, not tested logic going uncovered.
 
 ### Why 100% is not reachable here
 
@@ -213,7 +226,8 @@ mvn dependency:copy -Dartifact=org.jacoco:org.jacoco.cli:0.8.12:jar:nodeps   -Do
 | Vulnerabilities | 0 | 0 |
 | Tests | 325/325 | 325/325 |
 | Suite-level failure isolation | claimed, absent | implemented |
-| Coverage | 58.0% | 58.1% |
+| Coverage, overall | 58.0% | 50.6% *(denominator grew ~600 lines)* |
+| Coverage, excluding `Main` | 61.7% | **62.7%** |
 
 **Outstanding work**, in priority order:
 

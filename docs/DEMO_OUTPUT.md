@@ -60,26 +60,48 @@ java -cp out com.airtribe.meditrack.Main --seedDemo
 That ordering is not cosmetic. It is the evidence behind
 [JVM_Report.md](./JVM_Report.md) §2.
 
-Seeding then fires the observers:
+Seeding then fires the observers — 110 events in all:
 
 ```
-    [NOTIFY] BOOKED     APT-0001 — Dr. Anita Rao with Ravi Kumar, 26 Jul 2026, 10:00 am (in 11 hours)
-    [SMS -> ******5670] MediTrack: your appointment APT-0001 is booked for 26 Jul 2026, 10:00 am
-    [NOTIFY] BOOKED     APT-0002 — Dr. Vikram Nair with Meera Joshi, 26 Jul 2026, 11:00 am (in 12 hours)
-    [SMS -> ******5671] MediTrack: your appointment APT-0002 is booked for 26 Jul 2026, 11:00 am
-    [NOTIFY] BOOKED     APT-0003 — Dr. Sneha Iyer with Aditya Verma, 27 Jul 2026, 11:00 am (in 1 day)
-    [SMS -> ******5672] MediTrack: your appointment APT-0003 is booked for 27 Jul 2026, 11:00 am
-    [NOTIFY] BOOKED     APT-0004 — Dr. Priya Sharma with Fatima Sheikh, 27 Jul 2026, 02:00 pm (in 1 day)
-    [SMS -> ******5673] MediTrack: your appointment APT-0004 is booked for 27 Jul 2026, 02:00 pm
-  Demo data seeded: 6 doctors, 5 patients, 4 appointments.
+    [NOTIFY] BOOKED     APT-0001 — Dr. Sunil Kumar B A with B A Sunil Kumar, 26 Jul 2026, 09:00 am (in 9 hours)
+    [SMS -> ******0001] MediTrack: your appointment APT-0001 is booked for 26 Jul 2026, 09:00 am
+    [NOTIFY] BOOKED     APT-0002 — Dr. Rahul Mehta with P S Varun, 27 Jul 2026, 09:00 am (in 1 day)
+    [SMS -> ******0002] MediTrack: your appointment APT-0002 is booked for 27 Jul 2026, 09:00 am
+    [NOTIFY] BOOKED     APT-0003 — Dr. Farah Khan with Ahmed Zubair, 28 Jul 2026, 09:00 am (in 2 days)
+    [SMS -> ******0003] MediTrack: your appointment APT-0003 is booked for 28 Jul 2026, 09:00 am
+    ...
+  Demo clinic ready — 20 doctors across 14 specialities, 72 patients, 72 appointments, 33 bills.
+  Every patient carries a medical history. Try: Menu 1 -> 2, then Menu 5 -> 1 to search.
   [Reminders] Background scheduler started (every 300s, daemon thread).
 ```
 
 **One booking, two reactions.** `AppointmentService` fired a single event and
 knows nothing about SMS or console banners — `NotificationService` fanned it out
 to every registered observer. Adding a third channel means writing a class, not
-editing the service. Note the contact number is **masked** (`******5670`) at the
+editing the service. Note the contact number is **masked** (`******0001`) at the
 point of display.
+
+Three details in those three lines are worth pausing on:
+
+- **The project team appears twice, in two formats.** `Dr. Sunil Kumar B A` is
+  the doctor; `B A Sunil Kumar` is the patient. Same person, deliberately
+  distinct renderings, so the two records are never mistaken for each other.
+- **Patients are routed to a doctor who treats their condition.** Zubair's record
+  carries "mild asthma diagnosed 2019", and he is booked with Dr. Farah Khan —
+  *Pulmonology*. Nobody hard-coded that pairing; the seeder matches each
+  patient's condition against the speciality roster.
+- **The dataset is deterministic.** The seeder's `Random` takes a fixed seed, so
+  this output is byte-identical on every run. A demo that reshuffles cannot be
+  documented, screenshotted or asserted against.
+
+### What the seed contains
+
+| | |
+|---|---|
+| **20 doctors** | all 14 specialities covered, with ratings and fees |
+| **72 patients** | **every one** with a medical history and an allergy record |
+| **72 appointments** | Pending 13 · Confirmed 21 · Completed 33 · Cancelled 5 |
+| **33 bills** | across all three bill types, in every payment state |
 
 ---
 
@@ -102,33 +124,128 @@ point of display.
 Nine sections. Every one returns here after a single action — there is no nested
 loop to get lost in.
 
+### Wrong input is explained, not swallowed
+
+```
+  "patients" is not a main menu option.
+  Did you mean 1. Patients? Enter 1.
+
+  "99" is not a main menu option.
+  The main menu has options 0 to 9.
+  Not sure where to start? 1 lists patients, 7 shows reports.
+
+  "77" is not an option on the Patients menu.
+  This menu goes up to 6. Enter 0 to go back.
+
+  "quit" is not a main menu option.
+  To leave MediTrack, enter 0.
+  Unsaved changes are lost on exit — save first with 8 -> 1.
+```
+
+Sub-menus used to drop silently back to the caller on unrecognised input, which
+is **indistinguishable from a successful "back"** — the user cannot tell whether
+the keystroke was rejected or obeyed. Naming what was typed, and what the valid
+range is, turns a dead end into a hint.
+
+People type the *name* of what they want more often than a wrong number, so the
+main menu matches the input against its section names first and answers the
+question actually being asked.
+
 ---
 
 ## 3. Patient records
 
-**Menu 1 → 2 (List patients)**
+**Menu 1 → 2 (List patients)** lists all 72, two lines each:
 
 ```
-  Patients (5)
-  ----------------------------------------------------------------------------
-  [PAT-0001] Ravi Kumar  |  Age: 67 (SENIOR)  |  Blood: O+  |  Contact: ******5670  |  Insured: NO
-        History  : Hypertension diagnosed 2021
+  [PAT-0005] Ravi Kumar  |  Age: 67 (SENIOR)  |  Blood: O+  |  Contact: ******0005  |  Insured: NO
+        History  : Hypertension diagnosed 2021, on amlodipine, Coronary angiogram 2023 — mild stenosis, medically managed, Cholesterol elevated, statin started 2024
         Allergies: Penicillin
-  [PAT-0002] Meera Joshi  |  Age: 34 (ADULT)  |  Blood: A+  |  Contact: ******5671  |  Insured: YES
-        History  : Migraine, recurring
-  [PAT-0003] Aditya Verma  |  Age: 8 (CHILD)  |  Blood: B+  |  Contact: ******5672  |  Insured: YES
-        Allergies: Peanuts
-  [PAT-0004] Fatima Sheikh  |  Age: 45 (ADULT)  |  Blood: AB+  |  Contact: ******5673  |  Insured: NO
-  [PAT-0005] Karan Singh  |  Age: 72 (SENIOR)  |  Blood: O-  |  Contact: ******5674  |  Insured: NO
 ```
 
 Two details worth noticing:
 
 - **`SENIOR` / `ADULT` / `CHILD` is derived, never stored.** `getAgeGroup()`
   computes it from age, so it cannot drift out of sync with the record.
-- **`Migraine, recurring` contains a comma** and still round-trips through CSV
-  intact. `CSVUtil` escapes on write and reverses on read — without that, every
-  subsequent column would shift by one.
+- **`Coronary angiogram 2023 — mild stenosis, medically managed` contains
+  commas** and still round-trips through CSV intact. `CSVUtil` escapes on write
+  and reverses on read — without that, every subsequent column would shift.
+
+But look at that history line. Three separate clinical events, comma-joined into
+one unreadable run because the list view has two lines per patient to work with.
+That is what **Menu 1 → 7** exists to solve.
+
+### Menu 1 → 7 — the patient case sheet
+
+```
+   PATIENT CASE SHEET — Ravi Kumar (PAT-0005)
+  ========================================================================
+   Age            : 67 (SENIOR)
+   Blood group    : O+
+   Contact        : ******0005
+   Insurance      : Self-paying
+   Billing policy : Senior Citizen concession
+
+   MEDICAL HISTORY
+   ----------------------------------------------------------------------
+   1. Hypertension diagnosed 2021, on amlodipine
+   2. Coronary angiogram 2023 — mild stenosis, medically managed
+   3. Cholesterol elevated, statin started 2024
+
+   ALLERGIES
+   ----------------------------------------------------------------------
+   Penicillin
+
+   APPOINTMENTS (1)
+   ----------------------------------------------------------------------
+   APT-0005  30 Jul 2026, 09:00 am   Dr. Varun P S           Confirmed
+       symptoms: chest pain, heart
+
+   BILLS (0)
+   ----------------------------------------------------------------------
+   (none raised)
+  ========================================================================
+```
+
+Same three history entries, now **numbered and separate** — they are distinct
+clinical events and the screen says so. The sheet also answers the questions the
+list cannot: which billing policy this patient's own attributes will select and
+why, every appointment with its symptoms, every bill with the running balance.
+
+Note the routing: Ravi's history is cardiac, and he is booked with **Dr. Varun P S
+— Cardiology**.
+
+### Menu 2 → 7 — the doctor practice sheet
+
+The mirror image, for a `DOC-` id:
+
+```
+   PRACTICE SHEET — Dr. Varun P S (DOC-0002)
+  ========================================================================
+   Speciality     : Cardiology
+   Consultation   : ₹1,500.00
+   Experience     : 13 years (SENIOR)
+   Rating         : 4.8 / 5.0
+
+   TREATS (symptom keywords used by AI triage)
+   ----------------------------------------------------------------------
+   chest pain, heart, palpitation, breathless, bp, blood pressure, cholesterol
+
+   CASELOAD (5 appointments)
+   ----------------------------------------------------------------------
+   Pending      2
+   Confirmed    3
+
+   APT-0051  26 Jul 2026, 09:00 am   Kabir Verma         Confirmed
+   APT-0022  27 Jul 2026, 09:00 am   Leela Menon         Confirmed
+   APT-0053  28 Jul 2026, 09:00 am   Saanvi Kaur         Pending
+   APT-0005  30 Jul 2026, 09:00 am   Ravi Kumar          Confirmed
+   APT-0070  30 Jul 2026, 10:00 am   Rekha Sharma        Pending
+```
+
+The **TREATS** line is not a hard-coded string — it is the speciality's own
+symptom keywords, the same list AI triage scores against. Add a keyword to the
+enum and it appears here automatically.
 
 ---
 
@@ -264,20 +381,40 @@ Two deliberate scoring rules are visible above:
 
 ## 7. Reports and analytics
 
-**Menu 7 → 6 (Revenue summary)** — on a fresh seed, before any billing:
+**Menu 7 → 3 (Appointment status breakdown)**
 
 ```
-    Total billed      : ₹0.00
-    Total collected   : ₹0.00
-    Outstanding       : ₹0.00
-    GST collected     : ₹0.00
-    Average bill value: ₹0.00
+  Appointment status breakdown
+    Pending      13
+    Confirmed    21
+    Completed    33
+    Cancelled    5
+    Cancellation rate: 6.9%
 ```
 
-Zero because the demo seed books appointments but raises no bills. The
-interesting part is that **it does not divide by zero** — `getAverageBillValue()`
-returns `0.0` on an empty store rather than `NaN`, and there is an explicit
-assertion for exactly that (`empty store averages to zero without throwing`).
+**Menu 7 → 6 (Revenue summary)**
+
+```
+  Revenue summary
+    Total billed      : ₹34,735.66
+    Total collected   : ₹22,924.75
+    Outstanding       : ₹11,810.92
+    GST collected     : ₹5,298.66
+    Average bill value: ₹1,052.60
+    By bill type:
+      Consultation Bill    ₹26,029.62
+      Emergency Bill       ₹4,545.36
+      Procedure Bill       ₹4,160.68
+```
+
+The seed settles bills **unevenly on purpose** — roughly half in full, a third
+partially, the rest untouched. A dataset where every bill is paid makes both the
+"unpaid bills" screen and the outstanding-revenue figure useless, and those are
+exactly the screens worth seeing populated.
+
+It also **does not divide by zero** on an empty clinic — `getAverageBillValue()`
+returns `0.0` rather than `NaN`, and there is an explicit assertion for exactly
+that (`empty store averages to zero without throwing`).
 
 Every report in this section is a **Java Streams pipeline** — `groupingBy`,
 `averagingDouble`, `summaryStatistics`, `flatMap` + `distinct`. See

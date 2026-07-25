@@ -35,6 +35,30 @@ public enum Specialization {
     PEDIATRICS("Pediatrics", 700.0,
             "child", "infant", "vaccination", "growth", "baby", "toddler"),
 
+    GYNECOLOGY("Gynecology", 1100.0,
+            "pregnancy", "menstrual", "prenatal", "pcos", "fertility", "postnatal"),
+
+    ENT("ENT", 750.0,
+            "ear", "nose", "throat", "sinus", "hearing", "tonsil", "vertigo", "sore throat"),
+
+    OPHTHALMOLOGY("Ophthalmology", 900.0,
+            "eye", "vision", "blurred", "cataract", "glaucoma", "redness", "watering"),
+
+    PSYCHIATRY("Psychiatry", 1300.0,
+            "anxiety", "depression", "insomnia", "stress", "panic", "mood", "sleep"),
+
+    DENTISTRY("Dentistry", 600.0,
+            "tooth", "teeth", "gum", "cavity", "dental", "jaw", "toothache"),
+
+    PULMONOLOGY("Pulmonology", 1250.0,
+            "asthma", "wheezing", "breathing", "lung", "copd", "chronic cough", "tuberculosis"),
+
+    GASTROENTEROLOGY("Gastroenterology", 1150.0,
+            "stomach", "acidity", "abdominal", "liver", "nausea", "ulcer", "digestion", "bloating"),
+
+    ENDOCRINOLOGY("Endocrinology", 1350.0,
+            "diabetes", "thyroid", "hormone", "obesity", "sugar", "metabolism"),
+
     GENERAL_PRACTICE("General Practice", 500.0,
             "fever", "cold", "cough", "fatigue", "checkup", "general", "flu", "body ache");
 

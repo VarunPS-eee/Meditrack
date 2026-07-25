@@ -46,8 +46,20 @@ javac -encoding UTF-8 -d out $s
 java -cp out com.airtribe.meditrack.Main --seedDemo
 ```
 
-**Start with `--seedDemo`.** It gives you 6 doctors, 5 patients and 4
-appointments to explore. An empty clinic is a poor first impression.
+**Start with `--seedDemo`.** It gives you a clinic mid-operation rather than a
+set of empty menus:
+
+| | |
+|---|---|
+| **20 doctors** | across all 14 specialities, with ratings and fees |
+| **72 patients** | **every one** carrying a real medical history and allergy record |
+| **72 appointments** | spread across Pending, Confirmed, Completed and Cancelled |
+| **33 bills** | in every payment state — paid, part-paid and outstanding |
+
+The dataset is **deterministic** — the same run produces the same data every
+time, so anything you see here you can reproduce. Patients are routed to a doctor
+who actually treats their condition, so the AI triage and the reports have
+sensible material to work with.
 
 ### With Docker
 
@@ -110,15 +122,39 @@ Three things to know:
 IDs follow a fixed shape: `PAT-0001`, `DOC-0001`, `APT-0001`, `BIL-0001`. Type
 them exactly as shown, including the leading zeros.
 
+### If you type the wrong thing
+
+MediTrack tells you what happened rather than silently returning:
+
+```
+  "patients" is not a main menu option.
+  Did you mean 1. Patients? Enter 1.
+
+  "99" is not a main menu option.
+  The main menu has options 0 to 9.
+  Not sure where to start? 1 lists patients, 7 shows reports.
+
+  "77" is not an option on the Patients menu.
+  This menu goes up to 6. Enter 0 to go back.
+
+  "quit" is not a main menu option.
+  To leave MediTrack, enter 0.
+  Unsaved changes are lost on exit — save first with 8 -> 1.
+```
+
+Typing the *name* of a section works as a hint — the menu will point you at the
+right number.
+
 ---
 
 ## Menu 1 — Patients
 
 ```
 --- PATIENTS ---
-  1. Add patient          4. Delete patient
-  2. List patients        5. Add medical history
-  3. Update patient       6. Add allergy
+  1. Add patient          5. Add medical history
+  2. List patients        6. Add allergy
+  3. Update patient       7. View full profile  <-- case sheet
+  4. Delete patient
   0. Back
 ```
 
@@ -130,6 +166,45 @@ them exactly as shown, including the leading zeros.
 | **4. Delete patient** | Removes a patient | Fails cleanly if the id does not exist |
 | **5. Add medical history** | Appends a history entry | Commas are safe — they survive the CSV round trip |
 | **6. Add allergy** | Appends an allergy | Duplicates are ignored |
+| **7. View full profile** | **The complete case sheet for one patient** | Enter a patient id — see below |
+
+### Option 7 — the case sheet
+
+This is the screen to use when you have a patient id and want *everything* about
+them. The list view has to fit a patient on two lines, so it joins their medical
+history with commas — which stops being readable at three entries. The case sheet
+gives you, for one `PAT-` id:
+
+- Demographics, blood group, masked contact, insurance status
+- **Which billing policy their attributes will select**, and why
+- **Medical history, numbered in order** — each entry a separate clinical event
+- Allergies, called out separately
+- **Every appointment** with date, doctor, status and recorded symptoms
+- **Every bill** with total and balance, plus lifetime billed and outstanding
+
+```
+   PATIENT CASE SHEET — Ravi Kumar (PAT-0005)
+  ========================================================================
+   Age            : 67 (SENIOR)
+   Blood group    : O+
+   Insurance      : Self-paying
+   Billing policy : Senior Citizen concession
+
+   MEDICAL HISTORY
+   ----------------------------------------------------------------------
+   1. Hypertension diagnosed 2021, on amlodipine
+   2. Coronary angiogram 2023 — mild stenosis, medically managed
+   3. Cholesterol elevated, statin started 2024
+
+   ALLERGIES
+   ----------------------------------------------------------------------
+   Penicillin
+
+   APPOINTMENTS (1)
+   ----------------------------------------------------------------------
+   APT-0005  30 Jul 2026, 09:00 am   Dr. Varun P S           Confirmed
+       symptoms: chest pain, heart
+```
 
 **Contact numbers are masked on display** (`******5670`). The full number is held
 in the record; only the presentation is redacted.
@@ -144,24 +219,42 @@ hand.
 
 ```
 --- DOCTORS ---
-  1. Add doctor           4. Delete doctor
-  2. List doctors         5. Rate doctor
-  3. Update doctor        6. List by speciality
+  1. Add doctor           5. Rate doctor
+  2. List doctors         6. List by speciality
+  3. Update doctor        7. View full profile  <-- practice sheet
+  4. Delete doctor
   0. Back
 ```
 
 | Option | What it does | Notes |
 |---|---|---|
 | **1. Add doctor** | Creates a record, assigns the next `DOC-` id | Speciality is chosen from the `Specialization` enum |
-| **2. List doctors** | All doctors with fee, rating and experience | |
+| **2. List doctors** | All doctors with fee, rating and experience | Sorted by rating, best first |
 | **3. Update doctor** | Edit fee, rating or experience | |
 | **4. Delete doctor** | Removes a doctor | |
 | **5. Rate doctor** | Records a rating from 1.0 to 5.0 | Feeds the AI triage ranking |
 | **6. List by speciality** | Filter to one speciality | |
+| **7. View full profile** | **The complete practice sheet for one doctor** | Enter a doctor id |
 
-Each speciality carries its own **consultation fee** and the **symptom keywords**
-that AI triage scores against — so adding a speciality automatically teaches the
-triage helper about it.
+### Option 7 — the practice sheet
+
+The mirror of the patient case sheet. For one `DOC-` id it shows the speciality,
+fee, experience band and rating; the **symptom keywords AI triage scores them
+against**; their **entire caseload** broken down by status and listed in date
+order; and the **consultation revenue** earned from completed visits.
+
+"How busy is this doctor and what have they earned" is otherwise only answerable
+by reading two separate reports and doing the arithmetic yourself.
+
+### Specialities
+
+MediTrack ships with **14 specialities**: Cardiology, Dermatology, Neurology,
+Orthopedics, Pediatrics, Gynecology, ENT, Ophthalmology, Psychiatry, Dentistry,
+Pulmonology, Gastroenterology, Endocrinology and General Practice.
+
+Each carries its own **consultation fee** and the **symptom keywords** that AI
+triage scores against — so adding a speciality automatically teaches the triage
+helper about it, with no lookup table to keep in sync.
 
 ---
 

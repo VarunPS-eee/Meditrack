@@ -16,6 +16,14 @@ doctor rosters, appointment booking with real scheduling rules, itemised billing
 with GST, and rule-based symptom triage. It persists to plain CSV, ships in a
 286 MB container, and has no dependencies to install.
 
+`--seedDemo` starts you in a clinic mid-operation — **20 doctors across 14
+specialities, 72 patients each with a real medical history, 72 appointments
+spread across every lifecycle state, and 33 bills in every payment state.** The
+dataset is deterministic, and patients are routed to a doctor who actually
+treats their condition, so the reports and the triage engine have sensible
+material to work with. Ask for any patient id and you get their whole case sheet:
+numbered history, allergies, every appointment, every bill.
+
 It exists for two audiences. **Use it** as a working clinic manager, or **read
 it** as a worked example of object-oriented design in plain Java — the Factory,
 Strategy, Observer, Singleton and Template Method patterns all doing real work
@@ -100,8 +108,8 @@ Full setup guide including IntelliJ: **[docs/Setup_Instructions.md](docs/Setup_I
 
 | Area | Capabilities |
 |---|---|
-| **Patients** | Register, update, delete, medical history, allergies, blood group, insurance |
-| **Doctors** | Roster with specialities, fees, experience, ratings, availability |
+| **Patients** | Register, update, delete, medical history, allergies, blood group, insurance — plus a **full case sheet** per patient id |
+| **Doctors** | Roster across **14 specialities** with fees, experience, ratings, availability — plus a **practice sheet** per doctor id |
 | **Appointments** | Book, confirm, cancel, reschedule, complete — with double-booking prevention |
 | **Billing** | Three bill types, GST, insurance and senior-citizen policies, partial payments |
 | **Search** | Overloaded search by id, name, age, age range, speciality, fee |
@@ -133,9 +141,11 @@ Full setup guide including IntelliJ: **[docs/Setup_Instructions.md](docs/Setup_I
   ============================================================
 [MedicalEntity] Class loaded and initialised at 2026-07-25T14:16:26
 
-    [NOTIFY] BOOKED     APT-0001 — Dr. Anita Rao with Ravi Kumar, 26 Jul 2026, 10:00 am (in 19 hours)
-    [SMS -> ******5670] MediTrack: your appointment APT-0001 is booked for 26 Jul 2026, 10:00 am
-  Demo data seeded: 6 doctors, 5 patients, 4 appointments.
+    [NOTIFY] BOOKED     APT-0001 — Dr. Sunil Kumar B A with B A Sunil Kumar, 26 Jul 2026, 09:00 am (in 9 hours)
+    [SMS -> ******0001] MediTrack: your appointment APT-0001 is booked for 26 Jul 2026, 09:00 am
+    [NOTIFY] BOOKED     APT-0003 — Dr. Farah Khan with Ahmed Zubair, 28 Jul 2026, 09:00 am (in 2 days)
+    ...
+  Demo clinic ready — 20 doctors across 14 specialities, 72 patients, 72 appointments, 33 bills.
   [Reminders] Background scheduler started (every 300s, daemon thread).
 ```
 
@@ -402,7 +412,7 @@ Meditrack/
 └── README.md
 ```
 
-**45 Java files · 8,930 lines · zero dependencies**
+**45 Java files · 9,742 lines · zero dependencies**
 
 ---
 
@@ -432,7 +442,7 @@ to A** — including a leaked `ExecutorService`, uptime measured off a wall cloc
 that could run backwards, and DST-unsafe duration maths that would have put
 reminders an hour out twice a year.
 
-Coverage is **58.1%** instruction / 39.0% branch, and the gaps are documented
+Coverage is **50.6%** instruction overall — **62.7%** excluding the interactive `Main` loop — and the gaps are documented
 rather than hidden. **[CODE_QUALITY.md](docs/CODE_QUALITY.md)** has the full
 breakdown, every bug explained, and the reproduction commands.
 

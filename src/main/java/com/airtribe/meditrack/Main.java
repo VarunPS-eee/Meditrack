@@ -35,8 +35,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 /**
  * Console entry point for MediTrack.
@@ -99,7 +101,7 @@ public class Main {
             loadAllData();
         }
         if (arguments.contains(Constants.ARG_SEED_DEMO)) {
-            DemoDataSeeder.seed(patientService, doctorService, appointmentService);
+            DemoDataSeeder.seed(patientService, doctorService, appointmentService, billingService);
         }
         if (config.isRemindersEnabled()) {
             notificationService.startReminderScheduler(appointmentService::getAllAppointments, 300);
@@ -125,7 +127,8 @@ public class Main {
     private void runMainMenu() {
         while (running) {
             printMainMenu();
-            switch (readLine("  Choose an option: ")) {
+            String choice = readLine("  Choose an option: ");
+            switch (choice) {
                 case "1" -> patientMenu();
                 case "2" -> doctorMenu();
                 case "3" -> appointmentMenu();
@@ -136,7 +139,7 @@ public class Main {
                 case "8" -> dataMenu();
                 case "9" -> demonstrationsMenu();
                 case "0" -> running = false;
-                default -> System.out.println("  Unrecognised option. Please try again.");
+                default -> invalidMainOption(choice);
             }
         }
     }
@@ -161,19 +164,23 @@ public class Main {
         System.out.println("""
 
                   --- PATIENTS ---
-                    1. Add patient          4. Delete patient
-                    2. List patients        5. Add medical history
-                    3. Update patient       6. Add allergy
+                    1. Add patient          5. Add medical history
+                    2. List patients        6. Add allergy
+                    3. Update patient       7. View full profile  <-- case sheet
+                    4. Delete patient
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> addPatient();
             case "2" -> patientService.displayAll();
             case "3" -> updatePatient();
             case "4" -> deletePatient();
             case "5" -> addMedicalHistory();
             case "6" -> addAllergy();
-            default -> { /* back */ }
+            case "7" -> viewPatientProfile();
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "Patients", 7);
         }
     }
 
@@ -248,19 +255,23 @@ public class Main {
         System.out.println("""
 
                   --- DOCTORS ---
-                    1. Add doctor           4. Delete doctor
-                    2. List doctors         5. Rate doctor
-                    3. Update doctor        6. List by speciality
+                    1. Add doctor           5. Rate doctor
+                    2. List doctors         6. List by speciality
+                    3. Update doctor        7. View full profile  <-- practice sheet
+                    4. Delete doctor
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> addDoctor();
             case "2" -> doctorService.displayAll();
             case "3" -> updateDoctor();
             case "4" -> deleteDoctor();
             case "5" -> rateDoctor();
             case "6" -> listBySpeciality();
-            default -> { /* back */ }
+            case "7" -> viewDoctorProfile();
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "Doctors", 7);
         }
     }
 
@@ -356,7 +367,8 @@ public class Main {
                     4. Cancel appointment     8. Doctor's free slots
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> bookAppointment();
             case "2" -> appointmentService.displayAll();
             case "3" -> changeStatus("confirm");
@@ -365,7 +377,8 @@ public class Main {
             case "6" -> rescheduleAppointment();
             case "7" -> listUpcoming();
             case "8" -> showFreeSlots();
-            default -> { /* back */ }
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "Appointments", 8);
         }
     }
 
@@ -459,14 +472,16 @@ public class Main {
                     3. Print bill                       6. Compare billing strategies
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> generateBill();
             case "2" -> recordPayment();
             case "3" -> printBill();
             case "4" -> billingService.displayAll();
             case "5" -> listUnpaid();
             case "6" -> compareStrategies();
-            default -> { /* back */ }
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "Billing", 6);
         }
     }
 
@@ -561,14 +576,16 @@ public class Main {
                     3. Patients by age range   6. Appointments by keyword
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> printPatients(patientService.searchPatient(readLine("  Keyword: ")));
             case "2" -> searchPatientsByAge();
             case "3" -> searchPatientsByAgeRange();
             case "4" -> searchDoctorsBySpeciality();
             case "5" -> searchDoctorsByFee();
             case "6" -> printAppointments(appointmentService.searchAppointments(readLine("  Keyword: ")));
-            default -> { /* back */ }
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "Search", 6);
         }
     }
 
@@ -615,11 +632,13 @@ public class Main {
                     3. Screening prompts for a patient
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> runTriage();
             case "2" -> suggestSlots();
             case "3" -> screeningPrompts();
-            default -> { /* back */ }
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "AI Triage", 3);
         }
     }
 
@@ -665,7 +684,8 @@ public class Main {
                     4. Top rated doctors            8. Notification channels
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> reportAppointmentsPerDoctor();
             case "2" -> reportAverageFees();
             case "3" -> reportStatusBreakdown();
@@ -674,7 +694,8 @@ public class Main {
             case "6" -> reportRevenue();
             case "7" -> auditLog.printTrail();
             case "8" -> notificationService.printObservers();
-            default -> { /* back */ }
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "Reports & Analytics", 8);
         }
     }
 
@@ -771,14 +792,16 @@ public class Main {
                     3. Seed demo data         6. Show id counters
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> saveAllData();
             case "2" -> loadAllData();
-            case "3" -> DemoDataSeeder.seed(patientService, doctorService, appointmentService);
+            case "3" -> DemoDataSeeder.seed(patientService, doctorService, appointmentService, billingService);
             case "4" -> config.printConfiguration();
             case "5" -> toggleReminders();
             case "6" -> IdGenerator.getInstance().printCounters();
-            default -> { /* back */ }
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "Data & Settings", 6);
         }
     }
 
@@ -836,12 +859,14 @@ public class Main {
                     4. Singleton identity (eager vs lazy)
                     0. Back""");
 
-        switch (readLine("  Choose: ")) {
+        String choice = readLine("  Choose: ");
+        switch (choice) {
             case "1" -> demoDynamicDispatch();
             case "2" -> demoCopySemantics();
             case "3" -> demoImmutability();
             case "4" -> demoSingletons();
-            default -> { /* back */ }
+            case "0" -> { /* back */ }
+            default -> invalidOption(choice, "OOP Demonstrations", 4);
         }
     }
 
@@ -920,10 +945,272 @@ public class Main {
         IdGenerator.getInstance().printCounters();
     }
 
+    // ------------------------------------------------------------- profile views
+
+    /**
+     * Prints one patient's complete case sheet.
+     *
+     * <p>The list view has to fit a patient on two lines, so it joins the medical
+     * history with commas — which becomes unreadable the moment someone has three
+     * entries, and worse, hides that they are separate clinical events. A case
+     * sheet is the screen a clinician actually wants: history numbered in order,
+     * allergies called out, then every appointment and every bill for that person
+     * in one place.
+     */
+    private void viewPatientProfile() {
+        String id = readLine("  Patient id (e.g. PAT-0005): ");
+        Optional<Patient> found = patientService.searchPatientById(id);
+
+        if (found.isEmpty()) {
+            System.out.printf("%n  No patient with id \"%s\".%n", id);
+            System.out.println("  Ids look like PAT-0001. List them with 1 -> 2, or search with 5 -> 1.");
+            return;
+        }
+
+        Patient p = found.get();
+        String rule = "  " + "=".repeat(72);
+
+        System.out.println("\n" + rule);
+        System.out.printf("   PATIENT CASE SHEET — %s (%s)%n", p.getName(), p.getId());
+        System.out.println(rule);
+        System.out.printf("   Age            : %d (%s)%n", p.getAge(), p.getAgeGroup());
+        System.out.printf("   Blood group    : %s%n", p.getBloodGroup());
+        System.out.printf("   Contact        : %s%n", p.getMaskedContactNumber());
+        System.out.printf("   Insurance      : %s%n", p.isInsured() ? "Covered" : "Self-paying");
+        System.out.printf("   Billing policy : %s%n", describePolicy(p));
+
+        System.out.println("\n   MEDICAL HISTORY");
+        System.out.println("   " + "-".repeat(70));
+        List<String> history = p.getMedicalHistory();
+        if (history.isEmpty()) {
+            System.out.println("   (no entries recorded)");
+        } else {
+            for (int i = 0; i < history.size(); i++) {
+                System.out.printf("   %d. %s%n", i + 1, history.get(i));
+            }
+        }
+
+        System.out.println("\n   ALLERGIES");
+        System.out.println("   " + "-".repeat(70));
+        List<String> allergies = p.getAllergies();
+        System.out.println(allergies.isEmpty()
+                ? "   (none recorded — note this is different from 'no known allergies')"
+                : "   " + String.join(", ", allergies));
+
+        List<Appointment> appointments = appointmentService.getAppointmentsForPatient(p.getId());
+        System.out.printf("%n   APPOINTMENTS (%d)%n", appointments.size());
+        System.out.println("   " + "-".repeat(70));
+        if (appointments.isEmpty()) {
+            System.out.println("   (none booked)");
+        } else {
+            for (Appointment a : appointments) {
+                System.out.printf("   %s  %-22s  Dr. %-18s  %s%n",
+                        a.getAppointmentId(),
+                        DateUtil.formatForDisplay(a.getSlot()),
+                        a.getDoctor().getName(),
+                        a.getStatus());
+                if (!a.getSymptoms().isEmpty()) {
+                    System.out.printf("       symptoms: %s%n", String.join(", ", a.getSymptoms()));
+                }
+            }
+        }
+
+        List<Bill> bills = billingService.getBillsForPatient(p.getId());
+        System.out.printf("%n   BILLS (%d)%n", bills.size());
+        System.out.println("   " + "-".repeat(70));
+        if (bills.isEmpty()) {
+            System.out.println("   (none raised)");
+        } else {
+            double billed = 0;
+            double due = 0;
+            for (Bill b : bills) {
+                System.out.printf("   %s  %-20s  total %10s   due %10s%n",
+                        b.getBillId(), b.getEntityType(),
+                        Constants.CURRENCY_SYMBOL + String.format("%,.2f", b.getTotalAmount()),
+                        Constants.CURRENCY_SYMBOL + String.format("%,.2f", b.getAmountDue()));
+                billed += b.getTotalAmount();
+                due += b.getAmountDue();
+            }
+            System.out.println("   " + "-".repeat(70));
+            System.out.printf("   Lifetime billed %s   ·   Outstanding %s%n",
+                    Constants.CURRENCY_SYMBOL + String.format("%,.2f", billed),
+                    Constants.CURRENCY_SYMBOL + String.format("%,.2f", due));
+        }
+        System.out.println(rule);
+    }
+
+    /**
+     * Prints one doctor's practice sheet — roster, caseload and revenue.
+     *
+     * <p>The mirror of the patient case sheet. "How busy is this doctor and what
+     * have they earned" is otherwise only answerable by reading two separate
+     * reports and doing the arithmetic yourself.
+     */
+    private void viewDoctorProfile() {
+        String id = readLine("  Doctor id (e.g. DOC-0002): ");
+        Optional<Doctor> found = doctorService.findById(id);
+
+        if (found.isEmpty()) {
+            System.out.printf("%n  No doctor with id \"%s\".%n", id);
+            System.out.println("  Ids look like DOC-0001. List them with 2 -> 2.");
+            return;
+        }
+
+        Doctor d = found.get();
+        String rule = "  " + "=".repeat(72);
+
+        System.out.println("\n" + rule);
+        System.out.printf("   PRACTICE SHEET — Dr. %s (%s)%n", d.getName(), d.getId());
+        System.out.println(rule);
+        System.out.printf("   Speciality     : %s%n", d.getSpecialization().getDisplayName());
+        System.out.printf("   Consultation   : %s%,.2f%n",
+                Constants.CURRENCY_SYMBOL, d.getConsultationFee());
+        System.out.printf("   Experience     : %d years (%s)%n",
+                d.getYearsOfExperience(), d.getSeniorityBand());
+        System.out.printf("   Rating         : %.1f / 5.0%n", d.getRating());
+        System.out.printf("   Status         : %s%n", d.isAvailable() ? "Available" : "Unavailable");
+        System.out.printf("   Contact        : %s%n", d.getMaskedContactNumber());
+
+        System.out.println("\n   TREATS (symptom keywords used by AI triage)");
+        System.out.println("   " + "-".repeat(70));
+        System.out.println("   " + String.join(", ", d.getSpecialization().getSymptomKeywords()));
+
+        List<Appointment> appointments = appointmentService.getAppointmentsForDoctor(d.getId());
+        System.out.printf("%n   CASELOAD (%d appointments)%n", appointments.size());
+        System.out.println("   " + "-".repeat(70));
+        if (appointments.isEmpty()) {
+            System.out.println("   (no appointments booked)");
+        } else {
+            Map<AppointmentStatus, Long> byStatus = appointments.stream()
+                    .collect(Collectors.groupingBy(Appointment::getStatus, Collectors.counting()));
+            for (AppointmentStatus status : AppointmentStatus.values()) {
+                long n = byStatus.getOrDefault(status, 0L);
+                if (n > 0) {
+                    System.out.printf("   %-12s %d%n", status, n);
+                }
+            }
+            System.out.println();
+            for (Appointment a : appointments) {
+                System.out.printf("   %s  %-22s  %-18s  %s%n",
+                        a.getAppointmentId(),
+                        DateUtil.formatForDisplay(a.getSlot()),
+                        a.getPatient().getName(),
+                        a.getStatus());
+            }
+
+            double earned = appointments.stream()
+                    .filter(a -> a.getStatus() == AppointmentStatus.COMPLETED)
+                    .mapToDouble(Appointment::getConsultationFee)
+                    .sum();
+            System.out.println("   " + "-".repeat(70));
+            System.out.printf("   Consultation revenue from completed visits: %s%,.2f%n",
+                    Constants.CURRENCY_SYMBOL, earned);
+        }
+        System.out.println(rule);
+    }
+
+    /** Names the pricing policy a patient's own attributes will select. */
+    private String describePolicy(Patient p) {
+        if (p.isInsured()) {
+            return "Insurance (contractual — takes precedence)";
+        }
+        if (p.getAge() >= Constants.SENIOR_CITIZEN_AGE) {
+            return "Senior Citizen concession";
+        }
+        return "Standard";
+    }
+
     // ------------------------------------------------------------------ helpers
     private String readLine(String prompt) {
         System.out.print(prompt);
         return scanner.hasNextLine() ? scanner.nextLine().trim() : "0";
+    }
+
+    /**
+     * Explains an unrecognised sub-menu choice instead of silently returning.
+     *
+     * <p>The previous behaviour dropped straight back to the caller, which is
+     * indistinguishable from a successful "back" — the user cannot tell whether
+     * their keystroke was rejected or simply obeyed. Naming what was typed and
+     * what the valid range is turns a dead end into a hint, and costs nothing.
+     *
+     * @param entered  exactly what the user typed
+     * @param menuName the menu they are standing on
+     * @param highest  the highest numbered option this menu offers
+     */
+    private void invalidOption(String entered, String menuName, int highest) {
+        String typed = entered == null ? "" : entered.trim();
+
+        if (typed.isEmpty()) {
+            System.out.printf("  Nothing entered. Staying on %s — enter 0 to go back.%n", menuName);
+            return;
+        }
+
+        System.out.printf("%n  \"%s\" is not an option on the %s menu.%n", typed, menuName);
+
+        if (typed.matches("-?\\d+")) {
+            long asNumber = Long.parseLong(typed.length() > 18 ? typed.substring(0, 18) : typed);
+            if (asNumber > highest) {
+                System.out.printf("  This menu goes up to %d. Enter 0 to go back.%n", highest);
+            } else {
+                System.out.println("  Option numbers start at 0. Enter 0 to go back.");
+            }
+        } else if (typed.matches("(?i)back|exit|quit|cancel|q|b")) {
+            System.out.println("  Tip: 0 means \"back\" everywhere in MediTrack.");
+        } else {
+            System.out.printf("  Enter the number beside the action you want (0-%d).%n", highest);
+        }
+    }
+
+    /**
+     * Explains an unrecognised main-menu choice, and guesses what was meant.
+     *
+     * <p>People type the name of the thing they want rather than its number far
+     * more often than they type a wrong number. Matching the input against the
+     * section names costs one pass over nine strings and answers the question
+     * they were actually asking.
+     *
+     * @param entered exactly what the user typed
+     */
+    private void invalidMainOption(String entered) {
+        String typed = entered == null ? "" : entered.trim();
+
+        if (typed.isEmpty()) {
+            System.out.println("\n  Nothing entered. Enter a number from 0 to 9.");
+            return;
+        }
+
+        System.out.printf("%n  \"%s\" is not a main menu option.%n", typed);
+
+        String lower = typed.toLowerCase();
+
+        if (lower.matches("quit|exit|close|bye|q")) {
+            System.out.println("  To leave MediTrack, enter 0.");
+            System.out.println("  Unsaved changes are lost on exit — save first with 8 -> 1.");
+            return;
+        }
+
+        String[] sections = {"exit", "patients", "doctors", "appointments", "billing",
+                             "search", "ai triage", "reports", "data", "demonstrations"};
+        for (int i = 0; i < sections.length; i++) {
+            if (sections[i].startsWith(lower) || lower.startsWith(sections[i])) {
+                System.out.printf("  Did you mean %d. %s? Enter %d.%n",
+                        i, capitalise(sections[i]), i);
+                return;
+            }
+        }
+
+        if (typed.matches("-?\\d+")) {
+            System.out.println("  The main menu has options 0 to 9.");
+        } else {
+            System.out.println("  Enter a number from 0 to 9, or 0 to exit.");
+        }
+        System.out.println("  Not sure where to start? 1 lists patients, 7 shows reports.");
+    }
+
+    private static String capitalise(String text) {
+        return text.isEmpty() ? text
+                : Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 
     private Specialization promptSpecialization() {
