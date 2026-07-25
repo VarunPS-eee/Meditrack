@@ -27,3 +27,18 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+Thumbs.db
+
+### Java build artefacts ###
+*.class
+*.jar
+build/
+target/
+
+### MediTrack runtime data ###
+# Generated at run time by "Save all to CSV" / --loadData.
+# Not committed: it is per-run state, not source.
+data/
+
+### Generated documentation ###
+docs/javadoc/
