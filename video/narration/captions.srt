@@ -1,0 +1,200 @@
+1
+00:00:08,200 --> 00:00:13,000
+This is a hospital management system
+written in nothing but Java.
+
+2
+00:00:30,400 --> 00:00:34,600
+Forty-five source files.
+Nine and a half thousand lines.
+
+3
+00:00:34,800 --> 00:00:38,400
+No Spring. No Maven. No Gradle.
+
+4
+00:00:38,700 --> 00:00:44,000
+Not one third-party library — and three
+hundred and twenty-five tests that all pass.
+
+5
+00:00:57,000 --> 00:01:00,200
+Watch the order these four lines appear in.
+
+6
+00:01:01,500 --> 00:01:06,400
+Constants initialises first — a static block,
+running before a single object exists.
+
+7
+00:01:07,000 --> 00:01:13,500
+AppConfig is an eager singleton. Built during
+class initialisation, and thread-safe for free,
+
+8
+00:01:13,700 --> 00:01:17,800
+because the JVM runs that exactly once
+under its own lock.
+
+9
+00:01:18,400 --> 00:01:22,000
+IdGenerator is lazy. It waits until
+something actually asks for it.
+
+10
+00:01:23,500 --> 00:01:28,800
+And MedicalEntity — the root of the entire
+class hierarchy — loads last.
+
+11
+00:01:30,500 --> 00:01:35,800
+Not because it matters least. Because the JVM
+does not load a class until it is first used.
+
+12
+00:01:36,200 --> 00:01:40,000
+That ordering isn't documentation.
+It's the class loader, caught in the act.
+
+13
+00:01:42,000 --> 00:01:47,000
+The architecture is a directed acyclic graph,
+and it is enforced by the compiler.
+
+14
+00:01:47,400 --> 00:01:53,500
+Contracts at the bottom, depending on nothing.
+The domain above them. Services orchestrating it.
+
+15
+00:01:53,800 --> 00:01:57,500
+And the console — deliberately thin — on top.
+
+16
+00:02:12,000 --> 00:02:16,500
+Four people built this, and ownership runs
+by package, not by file.
+
+17
+00:02:16,800 --> 00:02:23,000
+Two engineers editing different methods in one file
+still collide. Different packages essentially never do.
+
+18
+00:02:25,000 --> 00:02:30,500
+And one rule holds the whole thing up. Main reads
+input, calls a service, prints the result.
+
+19
+00:02:30,800 --> 00:02:35,000
+It validates nothing. It stores nothing.
+It prices nothing.
+
+20
+00:02:35,400 --> 00:02:40,000
+Without that discipline, console applications
+reliably become god objects.
+
+21
+00:02:49,000 --> 00:02:53,000
+One bill. Three design patterns,
+each doing real work.
+
+22
+00:02:54,500 --> 00:03:01,500
+Factory chose the subclass — and its switch is
+exhaustive, so adding a bill type without
+
+23
+00:03:01,700 --> 00:03:05,500
+handling it is a compile error,
+not a silently unpriced bill.
+
+24
+00:03:06,200 --> 00:03:13,000
+Strategy chose the pricing policy. Nobody selected
+"senior citizen" — Ravi is sixty-seven, and the
+
+25
+00:03:13,200 --> 00:03:16,500
+policy was derived from his own record.
+
+26
+00:03:17,200 --> 00:03:23,500
+Template Method fixed the order. generateBill is
+final. The sequence is a business invariant,
+
+27
+00:03:23,700 --> 00:03:26,800
+so no subclass can discount after tax.
+
+28
+00:03:27,500 --> 00:03:31,500
+Fifteen hundred. Less ten percent.
+Then eighteen percent tax on what remains.
+
+29
+00:03:31,800 --> 00:03:35,000
+The discount lands before the tax — because
+the template will not permit anything else.
+
+30
+00:03:37,000 --> 00:03:40,500
+Type symptoms in plain English,
+and it routes you.
+
+31
+00:03:40,800 --> 00:03:47,500
+No machine learning. No network call. Keyword rules
+declared on the enum itself, so the mapping lives
+
+32
+00:03:47,700 --> 00:03:50,800
+next to the speciality it describes.
+
+33
+00:03:51,200 --> 00:03:56,500
+And it shows its work — which keywords matched,
+the confidence, and why each doctor ranked where they did.
+
+34
+00:03:56,800 --> 00:04:04,000
+Experience is capped at twenty years, so a long-serving
+generalist can never outrank a well-matched specialist.
+
+35
+00:04:07,000 --> 00:04:13,000
+SonarQube's first pass came back with thirteen bugs
+and a reliability rating of E. The worst there is.
+
+36
+00:04:14,500 --> 00:04:21,500
+A leaked thread pool. Uptime measured off a wall clock
+that could run backwards. Duration maths that would
+
+37
+00:04:21,700 --> 00:04:25,000
+put reminders an hour out, twice a year.
+
+38
+00:04:26,000 --> 00:04:30,000
+All thirteen are fixed. Zero bugs.
+Zero vulnerabilities. Rating A.
+
+39
+00:04:30,500 --> 00:04:34,000
+And where it isn't perfect,
+the documentation says so.
+
+40
+00:04:42,000 --> 00:04:48,000
+MediTrack. Forty-five files, zero dependencies,
+three hundred and twenty-five tests.
+
+41
+00:04:48,300 --> 00:04:51,500
+Open source, under MIT.
+
+42
+00:04:52,500 --> 00:04:56,500
+Read it. Run it. Or contribute to it.

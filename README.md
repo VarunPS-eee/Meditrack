@@ -380,6 +380,11 @@ Verified identically on Windows 11 and Alpine Linux — same bytecode, both gree
 
 | Document | Contents |
 |---|---|
+| **[USER_MANUAL.md](docs/USER_MANUAL.md)** | Every menu option explained, input rules, troubleshooting |
+| **[DEMO_OUTPUT.md](docs/DEMO_OUTPUT.md)** | Guided tour — every block is real captured output |
+| **[CODE_QUALITY.md](docs/CODE_QUALITY.md)** | SonarQube results, every bug explained, coverage and its gaps |
+| **[TEAM_AND_WORKFLOW.md](docs/TEAM_AND_WORKFLOW.md)** | Roles, SDLC cycle, dependency and topological graphs |
+| **[🎬 video/](video/)** | **Demonstration film** — script, animated 4K master, narration, captured footage |
 | **[Setup_Instructions.md](docs/Setup_Instructions.md)** | Three install routes, troubleshooting, guided tour |
 | **[JVM_Report.md](docs/JVM_Report.md)** | Class loader, memory areas, JIT, GC, WORA — tied to this codebase |
 | **[Design_Decisions.md](docs/Design_Decisions.md)** | Architecture, SOLID, patterns, deviations, limitations |
@@ -406,7 +411,8 @@ Meditrack/
 │   ├── strategy/      (3 files)      Pricing policies
 │   ├── test/          (1 file)       TestRunner — 325 assertions
 │   └── util/          (8 files)      DataStore<T>, Validator, DateUtil, CSVUtil, singletons
-├── docs/             (23 files)      Full documentation set
+├── docs/             (28 files)      Full documentation set
+├── video/                            Demonstration film — script, 4K master, captures
 ├── Dockerfile                        Multi-stage: JDK build → JRE runtime
 ├── docker-compose.yml
 └── README.md

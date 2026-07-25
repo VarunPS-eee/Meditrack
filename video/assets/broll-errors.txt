@@ -1,0 +1,14 @@
+  "patients" is not a main menu option.
+  Did you mean 1. Patients? Enter 1.
+
+============================================================
+--
+  "99" is not a main menu option.
+  The main menu has options 0 to 9.
+  Not sure where to start? 1 lists patients, 7 shows reports.
+
+--
+  "quit" is not a main menu option.
+  To leave MediTrack, enter 0.
+  Unsaved changes are lost on exit — save first with 8 -> 1.
+

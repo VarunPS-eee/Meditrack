@@ -1,0 +1,20 @@
+[Constants] Static block executed — data directory resolved to: data
+[AppConfig] Eager singleton constructed at 2026-07-26 00:56
+[IdGenerator] Lazy singleton constructed on first use.
+
+============================================================
+   __  __          _ _ _____              _
+  |  \/  | ___  __| (_)_   _| __ __ _  ___| | __
+  | |\/| |/ _ \/ _` | | | || '__/ _` |/ __| |/ /
+  | |  | |  __/ (_| | | | || | | (_| | (__|   <
+  |_|  |_|\___|\__,_|_| |_||_|  \__,_|\___|_|\_\
+============================================================
+    MediTrack v1.0.0 — Airtribe Java Track
+    Java 21.0.11 on Windows 11
+  ============================================================
+[MedicalEntity] Class loaded and initialised at 2026-07-26T00:56:48.420513100
+    [NOTIFY] BOOKED     APT-0001 — Dr. Sunil Kumar B A with B A Sunil Kumar, 27 Jul 2026, 09:00 am (in 1 day)
+    [SMS -> ******0001] MediTrack: your appointment APT-0001 is booked for 27 Jul 2026, 09:00 am
+    [NOTIFY] BOOKED     APT-0002 — Dr. Rahul Mehta with P S Varun, 28 Jul 2026, 09:00 am (in 2 days)
+    [SMS -> ******0002] MediTrack: your appointment APT-0002 is booked for 28 Jul 2026, 09:00 am
+    [NOTIFY] BOOKED     APT-0003 — Dr. Farah Khan with Ahmed Zubair, 29 Jul 2026, 09:00 am (in 3 days)

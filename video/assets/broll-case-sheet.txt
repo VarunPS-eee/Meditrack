@@ -1,0 +1,28 @@
+   PATIENT CASE SHEET — Ravi Kumar (PAT-0005)
+  ========================================================================
+   Age            : 67 (SENIOR)
+   Blood group    : O+
+   Contact        : ******0005
+   Insurance      : Self-paying
+   Billing policy : Senior Citizen concession
+
+   MEDICAL HISTORY
+   ----------------------------------------------------------------------
+   1. Hypertension diagnosed 2021, on amlodipine
+   2. Coronary angiogram 2023 — mild stenosis, medically managed
+   3. Cholesterol elevated, statin started 2024
+
+   ALLERGIES
+   ----------------------------------------------------------------------
+   Penicillin
+
+   APPOINTMENTS (1)
+   ----------------------------------------------------------------------
+   APT-0005  31 Jul 2026, 09:00 am   Dr. Varun P S           Confirmed
+       symptoms: chest pain, heart
+
+   BILLS (0)
+   ----------------------------------------------------------------------
+   (none raised)
+  ========================================================================
+
