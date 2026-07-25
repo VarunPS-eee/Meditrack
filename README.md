@@ -1,15 +1,32 @@
 # MediTrack — Clinic & Appointment Management System
 
-> A modular, object-oriented clinic management system built in **Core Java 21** — no frameworks,
-> no third-party dependencies, no build tool.
+> A clinic and appointment management system built in **Core Java 21** — no frameworks,
+> no third-party dependencies, no build tool. Written to be *read*, not just run.
 
 [![Java](https://img.shields.io/badge/Java-21%20LTS-orange)](https://adoptium.net/temurin/releases/?version=21)
 [![Tests](https://img.shields.io/badge/tests-325%2F325%20passing-brightgreen)](#testing)
+[![Bugs](https://img.shields.io/badge/SonarQube%20bugs-0-brightgreen)](docs/CODE_QUALITY.md)
 [![Docker](https://img.shields.io/badge/docker-286MB-blue)](#run-with-docker)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-lightgrey)](#)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
-**Airtribe Java Track** · Team: [Varun P S](docs/team/VARUN.md) ·
-[Zubair](docs/team/ZUBAIR.md) · [Sunil Kumar B A](docs/team/SUNIL.md)
+MediTrack runs a small clinic from a single console menu: patient records,
+doctor rosters, appointment booking with real scheduling rules, itemised billing
+with GST, and rule-based symptom triage. It persists to plain CSV, ships in a
+286 MB container, and has no dependencies to install.
+
+It exists for two audiences. **Use it** as a working clinic manager, or **read
+it** as a worked example of object-oriented design in plain Java — the Factory,
+Strategy, Observer, Singleton and Template Method patterns all doing real work
+rather than sitting in a tutorial. Menu 9 exists purely to make those concepts
+observable while the program runs.
+
+**Open source under [MIT](LICENSE) · [Contributions welcome](CONTRIBUTING.md)**
+
+**Airtribe Java Track** · Team: [Sunil Kumar B A](docs/team/SUNIL.md) ·
+[Varun P S](docs/team/VARUN.md) · [Zubair](docs/team/ZUBAIR.md) ·
+[Anushtha Sharma](docs/team/ANUSHTHA.md)
 
 ---
 
@@ -402,14 +419,73 @@ Deliberate scope boundaries, documented honestly in
 
 ---
 
-## Team
+## Code quality
 
-| Member | Role | Task sheet |
-|---|---|---|
-| **Varun P S** | Core entities, OOP, Factory & Strategy | [VARUN.md](docs/team/VARUN.md) |
-| **Zubair** | Services, exceptions, Observer, AI | [ZUBAIR.md](docs/team/ZUBAIR.md) |
-| **Sunil Kumar B A** | Utils, storage, Singletons, testing, docs, Docker | [SUNIL.md](docs/team/SUNIL.md) |
+Measured, not asserted — SonarQube 26.7 Community and JaCoCo 0.8.12:
+
+| Bugs | Vulnerabilities | Duplication | Maintainability | Tests |
+|:---:|:---:|:---:|:---:|:---:|
+| **0** 🟢 A | **0** 🟢 A | **0.0%** | 🟢 A | **325/325** |
+
+Thirteen bugs were found and fixed in the last pass, taking reliability from **E
+to A** — including a leaked `ExecutorService`, uptime measured off a wall clock
+that could run backwards, and DST-unsafe duration maths that would have put
+reminders an hour out twice a year.
+
+Coverage is **58.1%** instruction / 39.0% branch, and the gaps are documented
+rather than hidden. **[CODE_QUALITY.md](docs/CODE_QUALITY.md)** has the full
+breakdown, every bug explained, and the reproduction commands.
 
 ---
 
-*Built for the Airtribe Java Track.*
+## Team
+
+Four roles, each owning a vertical slice of the SDLC. Ownership is by **package,
+not by file** — the choice that kept merge conflicts near zero.
+
+| Member | Role | Owns | Sheet |
+|---|---|---|---|
+| **Sunil Kumar B A** | System Design & Data Architecture | HLD/LLD, DB design, `util/`, persistence, testing, Docker, docs | [SUNIL.md](docs/team/SUNIL.md) |
+| **Varun P S** | Core Domain Engineering | `entity/`, `factory/`, `strategy/`, `interfaces/` | [VARUN.md](docs/team/VARUN.md) |
+| **Zubair** | Services & Integration Engineering | `service/`, `observer/`, `exception/`, analytics | [ZUBAIR.md](docs/team/ZUBAIR.md) |
+| **Anushtha Sharma** | Experience & Interface Design | Menu flow, prompt wording, user manual, demo walkthrough | [ANUSHTHA.md](docs/team/ANUSHTHA.md) |
+
+**[TEAM_AND_WORKFLOW.md](docs/TEAM_AND_WORKFLOW.md)** has the dependency graph,
+the topological build order, where the parallel tracks ran, and a worked example
+tracing one bill through all four people's code.
+
+---
+
+## Contributing
+
+**MediTrack is open source under the [MIT License](LICENSE), and contributions
+are welcome** — from a typo fix to a new billing strategy.
+
+New to open source? Issues tagged
+[`good first issue`](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+are scoped to be finishable in an evening.
+
+| | |
+|---|---|
+| 🛠️ **[Contributing guide](CONTRIBUTING.md)** | Setup, conventions, PR process |
+| 🤝 **[Code of conduct](CODE_OF_CONDUCT.md)** | How we work together |
+| 🔒 **[Security policy](SECURITY.md)** | Private disclosure — never file security issues publicly |
+| 🐛 **[Report a bug](../../issues/new?template=bug_report.yml)** | Include the exact menu path |
+| ✨ **[Request a feature](../../issues/new?template=feature_request.yml)** | |
+
+Three ground rules define what this project is:
+
+1. **Zero third-party runtime dependencies.** JDK standard library only
+2. **The test suite stays green.** It gates the Docker build
+3. **No real patient data. Ever.** Not in code, fixtures, issues or screenshots
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 Sunil Kumar B A, Varun P S, Zubair, Anushtha Sharma
+
+---
+
+*Built for the Airtribe Java Track — and released as open source for anyone
+learning Core Java, OOP and design patterns.*

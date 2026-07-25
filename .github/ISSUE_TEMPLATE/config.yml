@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/VarunPS-eee/Meditrack/security/advisories/new
+    about: Please report security issues privately, never as a public issue. See SECURITY.md.
+  - name: 💬 Ask a question or discuss an idea
+    url: https://github.com/VarunPS-eee/Meditrack/discussions
+    about: For usage questions and open-ended discussion, use Discussions rather than the issue tracker.
+  - name: 📖 Read the documentation first
+    url: https://github.com/VarunPS-eee/Meditrack/blob/main/docs/USER_MANUAL.md
+    about: The user manual covers every menu option, and the setup guide covers Docker, CLI and IntelliJ.

@@ -1,0 +1,95 @@
+name: ✨ Feature request
+description: Suggest a new capability or an improvement to an existing one
+title: "[Feature]: "
+labels: ["enhancement", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea!
+
+        One thing to know up front: MediTrack has a **hard rule of zero
+        third-party runtime dependencies** — JDK standard library only. A
+        proposal that needs an external library will usually be declined, not
+        because it is a bad idea but because it changes what this project is.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: This can be built with the JDK standard library alone
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: |
+        Describe the situation you are stuck in, not the solution you have in
+        mind. The best feature requests explain the pain first.
+      placeholder: |
+        There is no way to see which doctor has the most free capacity on a
+        given day, so booking staff have to check each doctor one by one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+      description: Your proposed solution, as concretely as you can describe it.
+      placeholder: |
+        A new option under menu 3 (Doctors) — "Capacity report for a date" —
+        listing each doctor with booked/total slots, sorted by free capacity.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this touch?
+      multiple: true
+      options:
+        - Entities / domain model
+        - Services / business rules
+        - Billing (factory or strategies)
+        - Notifications / observers
+        - Persistence / CSV
+        - AI triage helper
+        - Console UI / menu
+        - Tests
+        - Documentation
+        - Docker / build
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: What else would solve the same problem, and why is this better?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you like to implement this?
+      options:
+        - "Yes, I would like to work on it"
+        - "Yes, but I would need guidance"
+        - "No, just suggesting"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Mockups of the console output, edge cases, related issues.
+    validations:
+      required: false

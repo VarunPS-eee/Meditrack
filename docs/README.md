@@ -8,6 +8,8 @@ Everything written about this project, indexed.
 
 | Document | Read this if you want to… |
 |---|---|
+| **[USER_MANUAL.md](./USER_MANUAL.md)** | **Use the app** — every menu option explained |
+| **[DEMO_OUTPUT.md](./DEMO_OUTPUT.md)** | **See it working** — guided tour with real captured output |
 | **[Setup_Instructions.md](./Setup_Instructions.md)** | Get it running — Docker, CLI or IntelliJ |
 | **[../README.md](../README.md)** | See what it does, with sample output |
 
@@ -35,9 +37,22 @@ Everything written about this project, indexed.
 
 | Document | Covers |
 |---|---|
+| **[TEAM_AND_WORKFLOW.md](./TEAM_AND_WORKFLOW.md)** | Roles, SDLC cycle, module + work dependency graphs, parallel tracks |
+| **[CODE_QUALITY.md](./CODE_QUALITY.md)** | SonarQube results, every bug explained, coverage and its gaps |
 | **[phases/README.md](./phases/README.md)** | Phase index, dependency graph, parallelisation, rubric coverage |
 | **[team/](./team/)** | Per-member task sheets with checkboxes and decisions |
 | **[pull-requests/](./pull-requests/)** | Every PR with rationale and review notes |
+
+---
+
+## Open source
+
+| Document | Covers |
+|---|---|
+| **[../CONTRIBUTING.md](../CONTRIBUTING.md)** | Setup, conventions, PR process, ground rules |
+| **[../CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)** | Contributor Covenant 2.1 |
+| **[../SECURITY.md](../SECURITY.md)** | Private disclosure, scope, security posture |
+| **[../LICENSE](../LICENSE)** | MIT |
 
 ---
 
@@ -58,20 +73,25 @@ Everything written about this project, indexed.
 | 10 | [Persistence & File I/O](./phases/PHASE_10_PERSISTENCE.md) | Sunil | ✅ |
 | 11 | [AI Feature](./phases/PHASE_11_AI_FEATURE.md) | Zubair | ✅ |
 | 12 | [Streams, Analytics & Concurrency](./phases/PHASE_12_STREAMS_CONCURRENCY.md) | All | ✅ |
-| 13 | [Console UI](./phases/PHASE_13_CONSOLE_UI.md) | All | ✅ |
+| 13 | [Console UI](./phases/PHASE_13_CONSOLE_UI.md) | Anushtha | ✅ |
 | 14 | [Testing & Quality](./phases/PHASE_14_TESTING.md) | Sunil | ✅ |
 | 15 | [Dockerization](./phases/PHASE_15_DOCKER.md) | Sunil | ✅ |
-| 16 | [Documentation & Submission](./phases/PHASE_16_DOCUMENTATION.md) | All | 🟡 |
+| 16 | [Documentation & Submission](./phases/PHASE_16_DOCUMENTATION.md) | Anushtha + Sunil | 🟡 |
 
 ---
 
 ## Team
 
+Four roles, each owning a vertical slice of the SDLC — see
+**[TEAM_AND_WORKFLOW.md](./TEAM_AND_WORKFLOW.md)** for the dependency graphs and
+how the work interlocks.
+
 | Member | Role | Sheet |
 |---|---|---|
-| Varun P S | Core entities, OOP, Factory | [VARUN.md](./team/VARUN.md) |
-| Zubair | Services, Observer, AI | [ZUBAIR.md](./team/ZUBAIR.md) |
-| Sunil Kumar B A | Utils, storage, testing, docs, Docker | [SUNIL.md](./team/SUNIL.md) |
+| Sunil Kumar B A | System Design & Data Architecture | [SUNIL.md](./team/SUNIL.md) |
+| Varun P S | Core Domain Engineering | [VARUN.md](./team/VARUN.md) |
+| Zubair | Services & Integration Engineering | [ZUBAIR.md](./team/ZUBAIR.md) |
+| Anushtha Sharma | Experience & Interface Design | [ANUSHTHA.md](./team/ANUSHTHA.md) |
 
 ---
 

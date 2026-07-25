@@ -1,0 +1,113 @@
+name: 🐛 Bug report
+description: Something in MediTrack behaves incorrectly
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+
+        ⚠️ **If this has security implications, stop.** Do not file it here —
+        follow the private disclosure process in
+        [SECURITY.md](../blob/main/SECURITY.md) instead.
+
+        🔒 **Never include real patient data.** Use synthetic examples only.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: This contains no real patient or personal health data
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you observe, and what did you expect instead?
+      placeholder: |
+        Booking an appointment for 09:00 was rejected as "outside clinic hours",
+        but the clinic opens at 09:00 so it should have been accepted.
+    validations:
+      required: true
+
+  - type: textarea
+    id: menu-path
+    attributes:
+      label: Exact menu path
+      description: |
+        **The most useful field in this form.** The precise sequence of menu
+        choices and inputs that triggers the bug — it makes the problem
+        reproducible in seconds.
+      placeholder: |
+        1. Start with: java -cp out com.airtribe.meditrack.Main --seedDemo
+        2. Menu 2 (Appointments) → 1 (Book appointment)
+        3. Patient ID: P001
+        4. Doctor ID: D002
+        5. Date/time entered: 2026-08-01 09:00
+        6. Error appears
+    validations:
+      required: true
+
+  - type: textarea
+    id: console-output
+    attributes:
+      label: Console output
+      description: Paste the relevant output, including any stack trace. Automatically formatted as code.
+      render: text
+    validations:
+      required: false
+
+  - type: dropdown
+    id: how-run
+    attributes:
+      label: How are you running it?
+      options:
+        - JDK directly (javac + java)
+        - Docker
+        - IntelliJ IDEA
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: input
+    id: java-version
+    attributes:
+      label: Java version
+      description: Output of `java -version`
+      placeholder: "openjdk 21.0.11 2026-04-21 LTS"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit SHA
+      description: Output of `git rev-parse --short HEAD`
+      placeholder: "9204334"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Workarounds you found, when it started, how often it reproduces.
+    validations:
+      required: false
