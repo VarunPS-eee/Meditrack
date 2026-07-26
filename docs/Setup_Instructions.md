@@ -4,6 +4,10 @@
 
 Three ways to run MediTrack, in increasing order of isolation. Pick one.
 
+> 🎬 **Prefer to watch someone else do it first?**
+> [MediTrack — The Heist](../video/meditrack-the-heist.mp4) shows the build and the
+> first run at **15:40**, then walks every menu. ([Contents](../video/README.md))
+
 | Route | Needs | Best for |
 |---|---|---|
 | [A. Docker](#route-a--docker-fastest) | Docker only | Reviewers — zero Java setup |

@@ -3,8 +3,13 @@
 A complete guide to running and using MediTrack, written for someone who has
 never seen it before. Every menu option is documented.
 
-Want to see it working first? The **[Demonstration & Output](./DEMO_OUTPUT.md)**
-page is a guided tour with real captured output.
+Want to see it working first? Two options:
+
+- **🎬 [Watch the film](../video/meditrack-the-heist.mp4)** — a 32-minute walkthrough
+  of the whole project. The section covering the menus below starts at **15:10** and
+  follows this manual in order, menu by menu. ([What's in it](../video/README.md))
+- **[Demonstration & Output](./DEMO_OUTPUT.md)** — the same tour in text, with real
+  captured output you can copy from.
 
 ---
 

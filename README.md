@@ -30,6 +30,17 @@ Strategy, Observer, Singleton and Template Method patterns all doing real work
 rather than sitting in a tutorial. Menu 9 exists purely to make those concepts
 observable while the program runs.
 
+### 🎬 Watch the film first
+
+**[MediTrack — The Heist](video/meditrack-the-heist.mp4)** is a 32-minute walkthrough
+of the entire project: what it is, the constraints it was built under, how the
+architecture was argued out, who built what, six things the JVM is doing that you
+can normally only read about, and then the real application driven through all nine
+menus. Every number on screen was captured by running the program.
+
+If you only have five minutes, the walkthrough act starts at **15:10**.
+More detail in **[video/README.md](video/README.md)**.
+
 **Open source under [MIT](LICENSE) · [Contributions welcome](CONTRIBUTING.md)**
 
 **Airtribe Java Track** · Team: [Sunil Kumar B A](docs/team/SUNIL.md) ·
@@ -384,7 +395,7 @@ Verified identically on Windows 11 and Alpine Linux — same bytecode, both gree
 | **[DEMO_OUTPUT.md](docs/DEMO_OUTPUT.md)** | Guided tour — every block is real captured output |
 | **[CODE_QUALITY.md](docs/CODE_QUALITY.md)** | SonarQube results, every bug explained, coverage and its gaps |
 | **[TEAM_AND_WORKFLOW.md](docs/TEAM_AND_WORKFLOW.md)** | Roles, SDLC cycle, dependency and topological graphs |
-| **[🎬 video/](video/)** | **Demonstration film** — script, animated 4K master, narration, captured footage |
+| **[🎬 video/](video/)** | **The film** — a 32-minute walkthrough of the whole project, from the architecture to every menu |
 | **[Setup_Instructions.md](docs/Setup_Instructions.md)** | Three install routes, troubleshooting, guided tour |
 | **[JVM_Report.md](docs/JVM_Report.md)** | Class loader, memory areas, JIT, GC, WORA — tied to this codebase |
 | **[Design_Decisions.md](docs/Design_Decisions.md)** | Architecture, SOLID, patterns, deviations, limitations |

@@ -10,7 +10,7 @@ Everything written about this project, indexed.
 |---|---|
 | **[USER_MANUAL.md](./USER_MANUAL.md)** | **Use the app** — every menu option explained |
 | **[DEMO_OUTPUT.md](./DEMO_OUTPUT.md)** | **See it working** — guided tour with real captured output |
-| **[🎬 ../video/](../video/)** | **Watch it** — demonstration film: script, animated 4K master, narration |
+| **[🎬 ../video/](../video/)** | **Watch it** — the 32-minute film: architecture, the JVM at work, and every menu |
 | **[Setup_Instructions.md](./Setup_Instructions.md)** | Get it running — Docker, CLI or IntelliJ |
 | **[../README.md](../README.md)** | See what it does, with sample output |
 
