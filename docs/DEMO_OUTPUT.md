@@ -91,8 +91,14 @@ Three details in those three lines are worth pausing on:
   *Pulmonology*. Nobody hard-coded that pairing; the seeder matches each
   patient's condition against the speciality roster.
 - **The dataset is deterministic.** The seeder's `Random` takes a fixed seed, so
-  this output is byte-identical on every run. A demo that reshuffles cannot be
+  the shape never moves: the same 20 doctors, 72 patients, 72 appointments and
+  33 bills on every run, on any machine. A demo that reshuffles cannot be
   documented, screenshotted or asserted against.
+
+  Two values are still clock-dependent, by design. Timestamps print the real
+  time, and `EmergencyBill` doubles its 25% surcharge outside clinic hours — so
+  emergency totals come out 1.2× higher on a run at midnight than at midday.
+  That is the pricing rule working, not the seed failing.
 
 ### What the seed contains
 

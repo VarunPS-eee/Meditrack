@@ -94,12 +94,32 @@ resolution regardless of your monitor.
 ## 2 · Capture the terminal footage
 
 Already done — [`capture/capture-all.sh`](capture/capture-all.sh) produced
-everything in [`assets/`](assets/). Re-run it any time; because the demo seeder
-uses a fixed random seed, the output is byte-identical:
+everything in [`assets/`](assets/). Re-run it any time:
 
 ```bash
 bash video/capture/capture-all.sh
 ```
+
+### What is stable across re-runs, and what is not
+
+The seeder runs off a fixed seed (`RANDOM_SEED = 20260725L`), so the **shape** of
+the dataset never moves: 20 doctors, 14 specialities, 72 patients, 72
+appointments, 33 bills, every time, on any machine.
+
+Two things legitimately do move, and a diff on `assets/` will show them:
+
+- **Timestamps** — the JVM boot trace and the bill date print the real clock
+- **Emergency bill amounts** — [`EmergencyBill`](../src/main/java/com/airtribe/meditrack/entity/EmergencyBill.java)
+  doubles its 25% surcharge outside clinic hours, so the same seeded emergency
+  bills come out 1.2× higher on a capture run at 00:56 than at 13:32
+
+That second one is the application being right, not the capture being flaky — an
+emergency attendance at one in the morning *should* cost more. The committed
+captures were taken after hours and therefore show the doubled rate.
+
+Neither figure appears on screen in the film, which shows only the ₹1,593.00
+consultation bill and the 325 assertions — both of which are clock-independent,
+and both of which the script asserts on every run.
 
 It ends by asserting that the two figures the film puts on screen — the
 ₹1,593.00 bill total and the 325 assertions — are actually present in the

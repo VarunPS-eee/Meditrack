@@ -56,10 +56,12 @@ set of empty menus:
 | **72 appointments** | spread across Pending, Confirmed, Completed and Cancelled |
 | **33 bills** | in every payment state — paid, part-paid and outstanding |
 
-The dataset is **deterministic** — the same run produces the same data every
-time, so anything you see here you can reproduce. Patients are routed to a doctor
-who actually treats their condition, so the AI triage and the reports have
-sensible material to work with.
+The dataset is **deterministic** — the same run produces the same records every
+time, so anything you see here you can reproduce. (Timestamps show the real
+clock, and emergency bills carry a doubled surcharge outside clinic hours, so
+those two figures will differ from the transcripts if you run at another hour.)
+Patients are routed to a doctor who actually treats their condition, so the AI
+triage and the reports have sensible material to work with.
 
 ### With Docker
 

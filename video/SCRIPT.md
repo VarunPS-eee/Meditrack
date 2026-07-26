@@ -290,7 +290,11 @@ connective tissue. Cut anything and cut from 7, 8 or 12 — never from 5 or 6.
   [`capture/shots.md`](capture/shots.md). If a value changes, re-capture — do not
   retouch the frame.
 - **Terminal footage is real**, produced by [`capture/capture-all.sh`](capture/capture-all.sh).
-  The demo seeder is deterministic, so the same run always yields the same data.
+  The demo seeder is seeded, so the records never reshuffle. Both figures the
+  film puts on screen — ₹1,593.00 and 325 — are clock-independent, and the
+  capture script asserts on them. (Timestamps and emergency-bill totals *do*
+  vary with the hour; neither is ever on screen. See
+  [`PRODUCTION.md`](PRODUCTION.md#what-is-stable-across-re-runs-and-what-is-not).)
 - **Hold longer than feels right.** In review, the note is always "too fast."
 - Render the animated scenes from [`scenes/meditrack-demo.html`](scenes/meditrack-demo.html);
   see [`PRODUCTION.md`](PRODUCTION.md) for the 4K capture and mux workflow.
