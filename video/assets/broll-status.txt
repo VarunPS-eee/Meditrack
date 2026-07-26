@@ -1,8 +1,0 @@
-  3. Appointment status breakdown 7. Audit trail
-  4. Top rated doctors            8. Notification channels
-  Appointment status breakdown
-    Pending      13
-    Confirmed    21
-    Completed    33
-    Cancelled    5
-    Cancellation rate: 6.9%

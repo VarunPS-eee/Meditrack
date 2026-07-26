@@ -57,9 +57,9 @@ coverage/
 __pycache__/
 *.pyc
 
-### Video render output ###
-# The rendered film is hundreds of MB — far past GitHub's 100MB file limit.
-# Everything needed to REGENERATE it is committed (script, animated master,
-# render pipeline); the artefact itself is distributed via Releases.
-video/out/
-video/render/node_modules/
+### Film ###
+# Only the finished film ships. The screenplay, scene sources, capture scripts
+# and render pipeline live in .local/film-workshop/ and are never committed.
+video/*
+!video/*.mp4
+!video/README.md
